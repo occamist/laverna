@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/lingua-sensei/laverna/synthesize"
+	"github.com/mrwormhole/laverna/synthesize"
 )
 
 var (

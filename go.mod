@@ -1,9 +1,9 @@
-module github.com/lingua-sensei/laverna
+module github.com/mrwormhole/laverna
 
 go 1.24
 
 require (
-	github.com/goccy/go-yaml v1.17.1
+	github.com/goccy/go-yaml v1.18.0
 	github.com/google/go-cmp v0.7.0
 	github.com/mrwormhole/errdiff v1.2.0
 	github.com/sourcegraph/conc v0.3.0

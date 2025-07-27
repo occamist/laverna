@@ -1,11 +1,11 @@
 # Laverna
 
-[![Version](https://img.shields.io/github/tag/lingua-sensei/laverna.svg)](https://github.com/lingua-sensei/laverna/tags)
-[![CI Build](https://github.com/lingua-sensei/laverna/actions/workflows/tests.yaml/badge.svg)](https://github.com/lingua-sensei/laverna/actions/workflows/tests.yaml)
-[![GoDoc](https://godoc.org/github.com/lingua-sensei/laverna?status.svg)](https://godoc.org/github.com/lingua-sensei/laverna)
-[![Report Card](https://goreportcard.com/badge/github.com/lingua-sensei/laverna)](https://goreportcard.com/report/github.com/lingua-sensei/laverna)
-[![License](https://img.shields.io/github/license/lingua-sensei/laverna)](https://github.com/lingua-sensei/laverna/blob/main/LICENSE)
-[![Coverage Status](https://coveralls.io/repos/github/lingua-sensei/laverna/badge.svg?branch=main)](https://coveralls.io/github/lingua-sensei/laverna?branch=main)
+[![Version](https://img.shields.io/github/tag/mrwormhole/laverna.svg)](https://github.com/mrwormhole/laverna/tags)
+[![CI Build](https://github.com/mrwormhole/laverna/actions/workflows/tests.yaml/badge.svg)](https://github.com/mrwormhole/laverna/actions/workflows/tests.yaml)
+[![GoDoc](https://godoc.org/github.com/mrwormhole/laverna?status.svg)](https://godoc.org/github.com/mrwormhole/laverna)
+[![Report Card](https://goreportcard.com/badge/github.com/mrwormhole/laverna)](https://goreportcard.com/report/github.com/mrwormhole/laverna)
+[![License](https://img.shields.io/github/license/mrwormhole/laverna)](https://github.com/mrwormhole/laverna/blob/main/LICENSE)
+[![Coverage Status](https://coveralls.io/repos/github/mrwormhole/laverna/badge.svg?branch=main)](https://coveralls.io/github/mrwormhole/laverna?branch=main)
 
 the goddess of the thieves, helps you steal translation speeches from the G-daddy monopoly.
 
@@ -14,7 +14,7 @@ the goddess of the thieves, helps you steal translation speeches from the G-dadd
 ### Install Via Go
 
 ```shell
-  go install github.com/lingua-sensei/laverna@latest
+  go install github.com/mrwormhole/laverna@latest
 ```
 
 ### Grab Binaries

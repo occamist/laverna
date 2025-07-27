@@ -108,7 +108,7 @@ formatters:
       sections:
         - standard
         - default
-        - prefix(github.com/lingua-sensei/laverna)
+        - prefix(github.com/mrwormhole/laverna)
       custom-order: true
   exclusions:
     generated: lax
