@@ -35,7 +35,7 @@ func main() {
 	}
 
 	var opts []synthesize.Opt
-	if isYAML{
+	if isYAML {
 		opts, err = synthesize.UnmarshalYAML(raw)
 		if err != nil {
 			log.Fatalf("failed to unmarshal YAML: %v", err)
