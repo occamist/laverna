@@ -2,6 +2,8 @@ module github.com/mrwormhole/laverna
 
 go 1.24
 
+toolchain go1.25.0
+
 require (
 	github.com/goccy/go-yaml v1.18.0
 	github.com/google/go-cmp v0.7.0
