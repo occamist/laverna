@@ -10,11 +10,13 @@ import (
 	"github.com/sourcegraph/conc/pool"
 )
 
+type SaveFn func(string, []byte) error
+
 // BatchRunner handles concurrent processing of synthesize operations
 type BatchRunner struct {
 	client     *http.Client
 	maxWorkers int
-	saveFn     func(string, []byte) error
+	save       SaveFn
 }
 
 // NewBatchRunner creates a new BatchRunner with the given options
@@ -22,7 +24,7 @@ func NewBatchRunner(opts ...BatchRunnerOption) *BatchRunner {
 	r := &BatchRunner{
 		client:     http.DefaultClient,
 		maxWorkers: runtime.GOMAXPROCS(0),
-		saveFn: func(text string, audio []byte) error {
+		save: func(text string, audio []byte) error {
 			return os.WriteFile(text+".mp3", audio, 0600)
 		},
 	}
@@ -52,9 +54,9 @@ func WithMaxWorkers(n int) BatchRunnerOption {
 }
 
 // WithSaveFunc sets custom save function
-func WithSaveFunc(fn func(string, []byte) error) BatchRunnerOption {
+func WithSaveFunc(fn SaveFn) BatchRunnerOption {
 	return func(r *BatchRunner) {
-		r.saveFn = fn
+		r.save = fn
 	}
 }
 
@@ -69,7 +71,7 @@ func (r *BatchRunner) Run(ctx context.Context, opts []Opt) error {
 				return fmt.Errorf("Run(%v): %w", opt, err)
 			}
 
-			if err := r.saveFn(opt.Text, audio); err != nil {
+			if err := r.save(opt.Text, audio); err != nil {
 				return fmt.Errorf("%T.SaveFunc(%v): %w", p, opt.Text, err)
 			}
 			return nil
