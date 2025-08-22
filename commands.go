@@ -19,7 +19,7 @@ func runCmd(ctx context.Context, filename string, maxWorkers int) error {
 	isYAML := strings.HasSuffix(filename, ".yaml") || strings.HasSuffix(filename, ".yml")
 	isCSV := strings.HasSuffix(filename, ".csv")
 	if !isYAML && !isCSV {
-		return fmt.Errorf("file format must be yaml/yml or csv")
+		return errors.New("file format must be yaml/yml or csv")
 	}
 
 	raw, err := os.ReadFile(filename) //nolint:gosec // file inclusion is intended
@@ -59,12 +59,12 @@ func ankiCmd(ctx context.Context, filename string, maxWorkers int, profile strin
 
 	isCSV := strings.HasSuffix(filename, ".csv")
 	if !isCSV {
-		return fmt.Errorf("file format must be csv")
+		return errors.New("file format must be csv")
 	}
 
 	f, err := os.Open(filename) //nolint:gosec // file inclusion is intended
 	if err != nil {
-		return fmt.Errorf("failed to read file(%q): %v", filename, err)
+		return fmt.Errorf("failed to open file(%q): %v", filename, err)
 	}
 	defer func() {
 		_ = f.Close()
