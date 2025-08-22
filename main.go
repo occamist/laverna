@@ -2,54 +2,69 @@ package main
 
 import (
 	"context"
-	"flag"
 	"log"
 	"os"
 	"runtime"
-	"strings"
 
-	"github.com/mrwormhole/laverna/synthesize"
-)
-
-var (
-	filenamePath = flag.String("file", "", "filename path that is used for reading YAML file")
-	maxWorkers   = flag.Int("workers", runtime.GOMAXPROCS(0), "maximum number of concurrent downloads")
+	"github.com/urfave/cli/v3"
 )
 
 func main() {
-	flag.Parse()
-	if *filenamePath == "" {
-		flag.Usage()
-		os.Exit(0)
+	cmd := &cli.Command{
+		Name:        "laverna",
+		Description: "Download Google Translate audios as mp3 files",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "file",
+				Aliases: []string{"f"},
+				Value:   "",
+				Usage:   "path to config file",
+			},
+			&cli.IntFlag{
+				Name:    "workers",
+				Aliases: []string{"w"},
+				Value:   runtime.GOMAXPROCS(0),
+				Usage:   "maximum number of concurrent downloads",
+			},
+		},
+		Commands: []*cli.Command{
+			{
+				Name:  "run",
+				Usage: "Downloads audios",
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					return runCmd(ctx, cmd.String("file"), cmd.Int("workers"))
+				},
+			},
+			{
+				Name:  "anki",
+				Usage: "Downloads audios to anki media folder and generates anki CSV file",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "profile",
+						Aliases: []string{"p"},
+						Value:   "",
+						Usage:   "anki profile name",
+					},
+					&cli.BoolFlag{ // to be passed down below to ankiCmd
+						Name:    "shuffle",
+						Aliases: []string{"s"},
+						Value:   true,
+						Usage:   "shuffles A,B,C,D choices per row",
+					},
+					&cli.BoolFlag{ // to be passed down below to ankiCmd
+						Name:    "strip-csv-header",
+						Aliases: []string{"strip"},
+						Value:   true,
+						Usage:   "strips csv header from the generated anki CSV file",
+					},
+				},
+				Action: func(ctx context.Context, cmd *cli.Command) error {
+					return ankiCmd(ctx, cmd.String("file"), cmd.Int("workers"), cmd.String("profile"))
+				},
+			},
+		},
 	}
-
-	raw, err := os.ReadFile(*filenamePath)
-	if err != nil {
-		log.Fatalf("failed to read file(%q): %v", *filenamePath, err)
-	}
-
-	isYAML := strings.HasSuffix(*filenamePath, ".yaml") || strings.HasSuffix(*filenamePath, ".yml")
-	isCSV := strings.HasSuffix(*filenamePath, ".csv")
-	if !isYAML && !isCSV {
-		log.Fatalf("file format must be yaml/yml or csv")
-	}
-
-	var opts []synthesize.Opt
-	if isYAML {
-		opts, err = synthesize.UnmarshalYAML(raw)
-		if err != nil {
-			log.Fatalf("failed to unmarshal YAML: %v", err)
-		}
-	}
-	if isCSV {
-		opts, err = synthesize.UnmarshalCSV(raw)
-		if err != nil {
-			log.Fatalf("failed to unmarshal CSV: %v", err)
-		}
-	}
-
-	runner := synthesize.NewBatchRunner(synthesize.WithMaxWorkers(*maxWorkers))
-	if err := runner.Run(context.Background(), opts); err != nil {
-		log.Fatalf("failed to run: %v", err)
+	if err := cmd.Run(context.Background(), os.Args); err != nil {
+		log.Fatal(err)
 	}
 }
