@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"io"
 	"math/rand/v2"
+	"strings"
 )
 
 // Record is how anki CSV file should look like
 type Record struct {
-	Text                       string
-	HelperText                 string
-	TextA, TextB, TextC, TextD string
-
+	Text                           string
+	HelperText                     string
+	TextA, TextB, TextC, TextD     string
 	AudioA, AudioB, AudioC, AudioD string
 	AudioAnswer                    string
 }
@@ -64,6 +64,31 @@ func (r Record) RandomizedRow() []string {
 		pairs[3].audio,
 		r.AudioAnswer,
 	}
+}
+
+// CleanedText returns the cleaned text and the answer
+// Record's text looks like this "I like {{c1::swimming}} in the sea"
+func (r Record) CleanedText() (string, string) {
+	start := strings.Index(r.Text, "{{c1::")
+	if start == -1 {
+		return "", ""
+	}
+
+	end := strings.Index(r.Text[start:], "}}")
+	if end == -1 {
+		return "", ""
+	}
+
+	// set to absolute end
+	end = start + end
+
+	// Length of "{{c1::" is 6
+	answer := r.Text[start+6 : end]
+
+	// Length of "}}" is 2
+	cleanedText := r.Text[:start] + answer + r.Text[end+2:]
+
+	return cleanedText, answer
 }
 
 const inputHeaderSize = 6 // only won't include audio fields
