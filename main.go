@@ -11,8 +11,9 @@ import (
 
 func main() {
 	cmd := &cli.Command{
-		Name:        "laverna",
-		Description: "Download Google Translate audios as mp3 files",
+		Name:                  "laverna",
+		Description:           "Download Google Translate audios as mp3 files",
+		EnableShellCompletion: true,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    "file",

@@ -57,3 +57,24 @@ or
 ```shell
   laverna -file example.yaml 
 ```
+
+### Shell Completions
+
+Output shell completion script for bash, zsh, fish, or Powershell.
+Source the output to enable completion.
+
+#### Bash
+
+source <(laverna completion bash)
+
+#### Zsh
+
+source <(laverna completion zsh)
+
+#### Fish
+
+laverna completion fish > ~/.config/fish/completions/laverna.fish
+
+#### Powershell
+
+Output the script to path/to/autocomplete/laverna.ps1 an run it.
