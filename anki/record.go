@@ -130,7 +130,7 @@ func ReadCSVRecords(r io.Reader) ([]Record, error) {
 }
 
 // WriteCSVRecords writes records into anki CSV file
-func WriteCSVRecords(w io.Writer, records []Record, stripCSVHeader bool) error {
+func WriteCSVRecords(w io.Writer, records []Record, stripCSVHeader, shuffle bool) error {
 	writer := csv.NewWriter(w)
 
 	if !stripCSVHeader {
@@ -144,7 +144,13 @@ func WriteCSVRecords(w io.Writer, records []Record, stripCSVHeader bool) error {
 	}
 
 	for _, r := range records {
-		row := r.Row()
+		var row []string
+		if shuffle {
+			row = r.RandomizedRow()
+		} else {
+			row = r.Row()
+		}
+
 		if err := writer.Write(row); err != nil {
 			return fmt.Errorf("%T.Write(): %w", writer, err)
 		}
