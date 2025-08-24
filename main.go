@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -66,20 +67,20 @@ func main() {
 					&cli.StringFlag{
 						Name:  "speed",
 						Value: "normal",
-						Usage: "decides the audio speed, must be one of these values: `normal`, `slow`, `slowest`",
+						Usage: "specify the speed of audios, must be one of these values: `normal`, `slow`, `slowest`",
 						Action: func(ctx context.Context, c *cli.Command, speed string) error {
 							if !synthesize.IsSpeed(speed) {
-								return errors.New("speed must be one of these values: normal, slow, slowest")
+								return errors.New("--speed must be one of these values: normal, slow, slowest")
 							}
 							return nil
 						},
 					},
 					&cli.StringFlag{
 						Name:     "voice",
-						Usage:    "decides the voice",
+						Usage:    "specify the voice of audios",
 						Required: true,
 					},
-					&cli.BoolFlag{ // to be implemented
+					&cli.BoolFlag{
 						Name:    "shuffle",
 						Aliases: []string{"s"},
 						Value:   true,
@@ -93,10 +94,13 @@ func main() {
 					},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
+					dir, filename := filepath.Dir(cmd.String("file")), "A"+filepath.Base(cmd.String("file"))
+					outFilename := filepath.Join(dir, filename)
+
 					cfg := anki.RunConfig{
 						Speed:          cmd.String("speed"),
 						Voice:          cmd.String("voice"),
-						OutFilename:    "A" + cmd.String("file"),
+						OutFilename:    outFilename,
 						Shuffle:        cmd.Bool("shuffle"),
 						StripCSVHeader: cmd.Bool("strip-csv-header"),
 					}

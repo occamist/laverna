@@ -78,8 +78,8 @@ func NewRunner(profile string, opts ...RunnerOption) (*Runner, error) {
 		filename = filename + ".mp3"
 		fp := filepath.Join(path, filename)
 
-		info, err := os.Stat(fp)
-		if info.Size() > 0 && err == nil {
+		_, err := os.Stat(fp)
+		if err == nil { // err == nil means file exists
 			return fmt.Errorf("saved file(%q) already exists", fp)
 		}
 
@@ -214,11 +214,12 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 
 	for i := range records {
 		uuids := collectedResults[i]
-		records[i].AudioAnswer = uuids["AudioAnswer"]
-		records[i].AudioA = uuids["AudioA"]
-		records[i].AudioB = uuids["AudioB"]
-		records[i].AudioC = uuids["AudioC"]
-		records[i].AudioD = uuids["AudioD"]
+
+		records[i].AudioAnswer = "[sound:" + uuids["AudioAnswer"] + ".mp3]"
+		records[i].AudioA = "[sound:" + uuids["AudioA"] + ".mp3]"
+		records[i].AudioB = "[sound:" + uuids["AudioB"] + ".mp3]"
+		records[i].AudioC = "[sound:" + uuids["AudioC"] + ".mp3]"
+		records[i].AudioD = "[sound:" + uuids["AudioD"] + ".mp3]"
 	}
 
 	outFile, err := os.Create(c.OutFilename)
@@ -229,7 +230,7 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 		_ = outFile.Close()
 	}()
 
-	if err := WriteCSVRecords(outFile, records, c.StripCSVHeader); err != nil {
+	if err := WriteCSVRecords(outFile, records, c.StripCSVHeader, c.Shuffle); err != nil {
 		return fmt.Errorf("WriteCSVRecords(%q): %w", outFile.Name(), err)
 	}
 	return nil
