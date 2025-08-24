@@ -72,7 +72,7 @@ func (r *Runner) Run(ctx context.Context, opts []Opt) error {
 			}
 
 			if err := r.save(opt.Text, audio); err != nil {
-				return fmt.Errorf("%T.SaveFunc(%v): %w", p, opt.Text, err)
+				return fmt.Errorf("%T.save(%v): %w", p, opt.Text, err)
 			}
 			return nil
 		})
