@@ -123,7 +123,7 @@ type result struct {
 	uuid     string
 }
 
-func synthesizeFunc(r *Runner, opt synthesize.Opt, rowIndex int, textType string, results chan<- result) func(ctx context.Context) error {
+func runFunc(r *Runner, opt synthesize.Opt, rowIndex int, textType string, results chan<- result) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		audio, err := synthesize.Run(ctx, r.client, opt)
 		if err != nil {
@@ -187,7 +187,7 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 		for _, pair := range pairs {
 			opt := baseOpt // copy the struct
 			opt.Text = pair.text
-			p.Go(synthesizeFunc(r, opt, i, pair.textType, results))
+			p.Go(runFunc(r, opt, i, pair.textType, results))
 		}
 	}
 
