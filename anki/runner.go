@@ -163,8 +163,8 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 		return fmt.Errorf("ReadCSVRecords(): %w", err)
 	}
 
-	const AudioCount = 5 // There will be 5 audios per record
-	results := make(chan result, len(records)*AudioCount)
+	const audioNum = 5 // There will be 5 audios per record
+	results := make(chan result, len(records)*audioNum)
 	baseOpt := synthesize.Opt{
 		Speed: synthesize.NewSpeed(c.Speed),
 		Voice: synthesize.Voice(c.Voice),
@@ -198,7 +198,7 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 		for result := range results {
 			_, ok := collectedResults[result.rowIndex]
 			if !ok {
-				collectedResults[result.rowIndex] = make(map[string]string, AudioCount)
+				collectedResults[result.rowIndex] = make(map[string]string, audioNum)
 				collectedResults[result.rowIndex][result.textType] = result.uuid
 				continue
 			}
