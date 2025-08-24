@@ -66,29 +66,26 @@ func (r Record) RandomizedRow() []string {
 	}
 }
 
-// CleanedText returns the cleaned text and the answer
-// Record's text looks like this "I like {{c1::swimming}} in the sea"
-func (r Record) CleanedText() (string, string) {
+// CleanedText returns the cleaned text without "{{c1::}}"
+func (r Record) CleanedText() string {
 	start := strings.Index(r.Text, "{{c1::")
 	if start == -1 {
-		return "", ""
+		return ""
 	}
 
 	end := strings.Index(r.Text[start:], "}}")
 	if end == -1 {
-		return "", ""
+		return ""
 	}
 
 	// set to absolute end
 	end = start + end
-
-	// Length of "{{c1::" is 6
+	// length of "{{c1::" is 6
 	answer := r.Text[start+6 : end]
-
-	// Length of "}}" is 2
+	// length of "}}" is 2
 	cleanedText := r.Text[:start] + answer + r.Text[end+2:]
 
-	return cleanedText, answer
+	return cleanedText
 }
 
 const inputHeaderSize = 6 // only won't include audio fields
@@ -133,15 +130,17 @@ func ReadCSVRecords(r io.Reader) ([]Record, error) {
 }
 
 // WriteCSVRecords writes records into anki CSV file
-func WriteCSVRecords(w io.Writer, records []Record) error {
+func WriteCSVRecords(w io.Writer, records []Record, stripCSVHeader bool) error {
 	writer := csv.NewWriter(w)
 
-	h := []string{
-		"Text", "HelperText", "TextA", "TextB", "TextC", "TextD",
-		"AudioA", "AudioB", "AudioC", "AudioD", "AudioAnswer",
-	}
-	if err := writer.Write(h); err != nil {
-		return fmt.Errorf("%T.Write(): %w", writer, err)
+	if !stripCSVHeader {
+		h := []string{
+			"Text", "HelperText", "TextA", "TextB", "TextC", "TextD",
+			"AudioA", "AudioB", "AudioC", "AudioD", "AudioAnswer",
+		}
+		if err := writer.Write(h); err != nil {
+			return fmt.Errorf("%T.Write(): %w", writer, err)
+		}
 	}
 
 	for _, r := range records {

@@ -9,7 +9,7 @@
 
 the goddess of the thieves, helps you steal translation speeches from the G-daddy monopoly.
 
-<img src="https://github.com/user-attachments/assets/d1d344c9-f36b-4cf7-af70-f162f93ea9f0" width="400" alt="squash-goose">
+<img src="https://github.com/user-attachments/assets/d1d344c9-f36b-4cf7-af70-f162f93ea9f0" width="400" alt="goddess-of-thieves">
 
 ### Install Via Go
 

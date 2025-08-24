@@ -12,10 +12,6 @@ import (
 )
 
 func runCmd(ctx context.Context, filename string, maxWorkers int) error {
-	if filename == "" {
-		return errors.New("--file must not be blank")
-	}
-
 	isYAML := strings.HasSuffix(filename, ".yaml") || strings.HasSuffix(filename, ".yml")
 	isCSV := strings.HasSuffix(filename, ".csv")
 	if !isYAML && !isCSV {
@@ -49,14 +45,7 @@ func runCmd(ctx context.Context, filename string, maxWorkers int) error {
 	return nil
 }
 
-func ankiCmd(ctx context.Context, filename string, maxWorkers int, profile string) error {
-	if filename == "" {
-		return errors.New("--file must not be blank")
-	}
-	if profile == "" {
-		return errors.New("--profile must not be blank")
-	}
-
+func ankiCmd(ctx context.Context, filename string, maxWorkers int, profile string, cfg anki.RunConfig) error {
 	isCSV := strings.HasSuffix(filename, ".csv")
 	if !isCSV {
 		return errors.New("file format must be csv")
@@ -74,9 +63,7 @@ func ankiCmd(ctx context.Context, filename string, maxWorkers int, profile strin
 	if err != nil {
 		return fmt.Errorf("failed to make runner: %v", err)
 	}
-
-	outFilename := "A" + filename
-	if err := runner.Run(ctx, f, outFilename); err != nil {
+	if err := runner.Run(ctx, f, cfg); err != nil {
 		return fmt.Errorf("failed to run: %v", err)
 	}
 

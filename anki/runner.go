@@ -117,40 +117,120 @@ func WithSaveFunc(fn SaveFn) RunnerOption {
 	}
 }
 
+type result struct {
+	rowIndex int
+	textType string
+	uuid     string
+}
+
+func synthesizeFunc(r *Runner, opt synthesize.Opt, rowIndex int, textType string, results chan<- result) func(ctx context.Context) error {
+	return func(ctx context.Context) error {
+		audio, err := synthesize.Run(ctx, r.client, opt)
+		if err != nil {
+			return fmt.Errorf("Run(%v) with row index(%d): %w", opt, rowIndex, err)
+		}
+
+		uuid := uuid.NewString()
+		if err := r.save(uuid, audio); err != nil {
+			return fmt.Errorf("%T.save(%v) with row index(%d): %w", r, uuid, rowIndex, err)
+		}
+
+		results <- result{
+			rowIndex: rowIndex,
+			textType: textType,
+			uuid:     uuid,
+		}
+		return nil
+	}
+}
+
+// RunConfig tells each run how to run
+type RunConfig struct {
+	Speed          string
+	Voice          string
+	HelperLanguage string
+	OutFilename    string
+	Shuffle        bool
+	StripCSVHeader bool
+}
+
 // Run runs given opts concurrently and stops if encounters an error
-func (r *Runner) Run(ctx context.Context, reader io.Reader, outFilename string) error {
+func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 	p := pool.New().WithContext(ctx).WithMaxGoroutines(r.maxWorkers)
 
 	records, err := ReadCSVRecords(reader)
 	if err != nil {
-		return fmt.Errorf("readRecords(): %w", err)
+		return fmt.Errorf("ReadCSVRecords(): %w", err)
 	}
 
-	// speed must be passed as a flag
-	// voice is only different for HelperText
-	// There will be 6 texts per record
-	for _, record := range records {
-		p.Go(func(ctx context.Context) error {
-			opt := synthesize.Opt{
-				Speed: synthesize.NormalSpeed,
-				Voice: synthesize.NepaliVoice,
-				Text:  record.Text,
-			}
-			audio, err := synthesize.Run(ctx, r.client, opt)
-			if err != nil {
-				return fmt.Errorf("Run(%v): %w", opt, err)
-			}
-
-			uuid := uuid.NewString()
-			if err := r.save(uuid, audio); err != nil {
-				return fmt.Errorf("%T.SaveFunc(%v): %w", p, uuid, err)
-			}
-			return nil
-		})
+	const AudioCount = 5 // There will be 5 audios per record
+	results := make(chan result, len(records)*AudioCount)
+	baseOpt := synthesize.Opt{
+		Speed: synthesize.NewSpeed(c.Speed),
+		Voice: synthesize.Voice(c.Voice),
 	}
+
+	type pair struct {
+		text     string
+		textType string
+	}
+
+	for i, record := range records {
+		pairs := []pair{
+			{record.CleanedText(), "AudioAnswer"},
+			{record.TextA, "AudioA"},
+			{record.TextB, "AudioB"},
+			{record.TextC, "AudioC"},
+			{record.TextD, "AudioD"},
+		}
+
+		for _, pair := range pairs {
+			opt := baseOpt // copy the struct
+			opt.Text = pair.text
+			p.Go(synthesizeFunc(r, opt, i, pair.textType, results))
+		}
+	}
+
+	collectedResults := make(map[int]map[string]string, len(records)) // rowIndex -> textType -> uuid
+	done := make(chan struct{}, 1)
+	go func() {
+		defer close(done)
+		for result := range results {
+			_, ok := collectedResults[result.rowIndex]
+			if !ok {
+				collectedResults[result.rowIndex] = make(map[string]string, AudioCount)
+				collectedResults[result.rowIndex][result.textType] = result.uuid
+				continue
+			}
+			collectedResults[result.rowIndex][result.textType] = result.uuid
+		}
+	}()
 
 	if err := p.Wait(); err != nil {
 		return fmt.Errorf("%T.Wait(): %w", p, err)
+	}
+	close(results)
+	<-done
+
+	for i := range records {
+		uuids := collectedResults[i]
+		records[i].AudioAnswer = uuids["AudioAnswer"]
+		records[i].AudioA = uuids["AudioA"]
+		records[i].AudioB = uuids["AudioB"]
+		records[i].AudioC = uuids["AudioC"]
+		records[i].AudioD = uuids["AudioD"]
+	}
+
+	outFile, err := os.Create(c.OutFilename)
+	if err != nil {
+		return fmt.Errorf("os.Create(%q): %w", c.OutFilename, err)
+	}
+	defer func() {
+		_ = outFile.Close()
+	}()
+
+	if err := WriteCSVRecords(outFile, records, c.StripCSVHeader); err != nil {
+		return fmt.Errorf("WriteCSVRecords(%q): %w", outFile.Name(), err)
 	}
 	return nil
 }
