@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/sourcegraph/conc/pool"
@@ -125,6 +126,10 @@ type result struct {
 
 func runFunc(r *Runner, opt synthesize.Opt, rowIndex int, textType string, results chan<- result) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
+		if strings.TrimSpace(opt.Text) == "" {
+			return fmt.Errorf("text is empty on column(%q) and row(%d)", textType, rowIndex+1)
+		}
+
 		audio, err := synthesize.Run(ctx, r.client, opt)
 		if err != nil {
 			return fmt.Errorf("Run(%v) with row index(%d): %w", opt, rowIndex, err)

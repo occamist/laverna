@@ -8,7 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/mrwormhole/errdiff"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestBatchRunner(t *testing.T) {
@@ -74,8 +75,8 @@ func TestBatchRunner(t *testing.T) {
 			)
 
 			err := runner.Run(tt.ctx, tt.opts)
-			if diff := errdiff.Check(err, tt.wantErr); diff != "" {
-				t.Errorf("%T.Run(): err diff=\n%s", runner, diff)
+			if !cmp.Equal(tt.wantErr, err, cmpopts.EquateErrors()) {
+				t.Errorf("%T.Run(): wantErr=%v, gotErr=%v", runner, tt.wantErr, err)
 			}
 
 			for _, wantAudio := range tt.wantAudios {
