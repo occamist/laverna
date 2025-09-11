@@ -66,25 +66,32 @@ func (r Record) RandomizedRow() []string {
 	}
 }
 
+const (
+	startCloze = "{{c1::"
+	endCloze   = "}}"
+)
+
 // CleanedText returns the cleaned text without "{{c1::}}"
 func (r Record) CleanedText() string {
-	start := strings.Index(r.Text, "{{c1::")
+	start := strings.Index(r.Text, startCloze)
 	if start == -1 {
 		return ""
 	}
 
-	end := strings.Index(r.Text[start:], "}}")
+	end := strings.Index(r.Text[start:], endCloze)
 	if end == -1 {
 		return ""
 	}
 
 	// set to absolute end
 	end = start + end
-	// length of "{{c1::" is 6
-	answer := r.Text[start+6 : end]
-	// length of "}}" is 2
-	cleanedText := r.Text[:start] + answer + r.Text[end+2:]
+	answer := r.Text[start+len(startCloze) : end]
 
+	cleanedText := r.Text[:start] + answer + r.Text[end+len(endCloze):]
+	cleanedText = strings.ReplaceAll(cleanedText, "  ", " ")
+	if strings.Contains(cleanedText, startCloze) || strings.Contains(cleanedText, endCloze) {
+		return ""
+	}
 	return cleanedText
 }
 
