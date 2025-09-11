@@ -124,6 +124,11 @@ func ReadCSVRecords(r io.Reader) ([]Record, error) {
 			return nil, fmt.Errorf("%T.Read(): %w", reader, err)
 		}
 
+		text := record[0]
+		if !strings.Contains(text, startCloze) && !strings.Contains(text, endCloze) {
+			return nil, fmt.Errorf("text(%q) must contain cloze deletion format with %sWORD%s", text, startCloze, endCloze)
+		}
+
 		records = append(records, Record{
 			Text:       record[0],
 			HelperText: record[1],
