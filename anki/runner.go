@@ -79,9 +79,17 @@ func NewRunner(profile string, opts ...RunnerOption) (*Runner, error) {
 		filename = filename + ".mp3"
 		fp := filepath.Join(path, filename)
 
+		// ensure directory exists
+		if err := os.MkdirAll(path, 0750); err != nil {
+			return fmt.Errorf("failed to make directory(%q): %w", path, err)
+		}
+
 		_, err := os.Stat(fp)
 		if err == nil { // err == nil means file exists
 			return fmt.Errorf("saved file(%q) already exists", fp)
+		}
+		if !os.IsNotExist(err) {
+			return fmt.Errorf("failed to check file(%q): %w", fp, err)
 		}
 
 		return os.WriteFile(fp, audio, 0600)
