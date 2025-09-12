@@ -1,8 +1,11 @@
 package anki
 
 import (
+	"bytes"
 	"errors"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -264,6 +267,74 @@ Question,Helper,A,B,C,D,Extra`,
 
 			if diff := cmp.Diff(tt.want, got); diff != "" {
 				t.Errorf("ReadCSVRecords() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestWriteCSVRecords(t *testing.T) {
+	fp := filepath.Join("..", "testdata", "Aout.csv")
+	raw, err := os.ReadFile(fp)
+	if err != nil {
+		t.Fatalf("os.ReadFile(%v): %v", fp, err)
+	}
+
+	tests := []struct {
+		name           string
+		records        []Record
+		stripCSVHeader bool
+		shuffle        bool
+		want           string
+		wantErr        error
+	}{
+		{
+			name: "write with records with header",
+			records: []Record{
+				{
+					Text:        "ฉันชอบ{{c1::ฟัง}}เพลง",
+					HelperText:  "I like to listen to music",
+					TextA:       "ฟัง",
+					TextB:       "เล่น",
+					TextC:       "ดู",
+					TextD:       "อ่าน",
+					AudioA:      "[sound:a.mp3]",
+					AudioB:      "[sound:b.mp3]",
+					AudioC:      "[sound:c.mp3]",
+					AudioD:      "[sound:d.mp3]",
+					AudioAnswer: "[sound:e.mp3]",
+				},
+			},
+			stripCSVHeader: false,
+			want:           string(raw),
+		},
+		{
+			name:           "write empty records without header",
+			records:        []Record{},
+			stripCSVHeader: true,
+			want:           "",
+		},
+		{
+			name:           "write empty records with header",
+			records:        []Record{},
+			stripCSVHeader: false,
+			want:           "Text,HelperText,TextA,TextB,TextC,TextD,AudioA,AudioB,AudioC,AudioD,AudioAnswer\n",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var buf bytes.Buffer
+			err := WriteCSVRecords(&buf, tt.records, tt.stripCSVHeader, tt.shuffle)
+
+			if !cmp.Equal(tt.wantErr, err, cmpopts.EquateErrors()) {
+				if !cmp.Equal(tt.wantErr.Error(), err.Error()) {
+					t.Errorf("WriteCSVRecords(): wantErr=%v gotError=%v", tt.wantErr, err)
+				}
+			}
+
+			got := buf.String()
+			if diff := cmp.Diff(tt.want, got); diff != "" {
+				t.Errorf("WriteCSVRecords(): mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
