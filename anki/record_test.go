@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -273,10 +272,10 @@ Question,Helper,A,B,C,D,Extra`,
 }
 
 func TestWriteCSVRecords(t *testing.T) {
-	fp := filepath.Join("..", "testdata", "Aout.csv")
-	raw, err := os.ReadFile(fp)
+	const f = "../testdata/Aout.csv"
+	raw, err := os.ReadFile(f)
 	if err != nil {
-		t.Fatalf("os.ReadFile(%v): %v", fp, err)
+		t.Fatalf("os.ReadFile(%q): %v", f, err)
 	}
 
 	tests := []struct {
