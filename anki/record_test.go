@@ -333,7 +333,7 @@ func TestWriteCSVRecords(t *testing.T) {
 
 			got := buf.String()
 			if diff := cmp.Diff(tt.want, got); diff != "" {
-				t.Errorf("WriteCSVRecords(): mismatch (-want +got):\n%s", diff)
+				t.Errorf("WriteCSVRecords() mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
