@@ -80,7 +80,7 @@ func NewRunner(profile string, opts ...RunnerOption) (*Runner, error) {
 		fp := filepath.Join(path, filename)
 
 		// ensure directory exists
-		if err := os.MkdirAll(path, 0750); err != nil {
+		if err := os.MkdirAll(path, 0o750); err != nil {
 			return fmt.Errorf("failed to make directory(%q): %w", path, err)
 		}
 
@@ -92,7 +92,7 @@ func NewRunner(profile string, opts ...RunnerOption) (*Runner, error) {
 			return fmt.Errorf("failed to check file(%q): %w", fp, err)
 		}
 
-		return os.WriteFile(fp, audio, 0600)
+		return os.WriteFile(fp, audio, 0o600)
 	}
 	r.save = saveFile
 
@@ -239,9 +239,7 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 	if err != nil {
 		return fmt.Errorf("os.Create(%q): %w", c.OutFilename, err)
 	}
-	defer func() {
-		_ = outFile.Close()
-	}()
+	defer func() { _ = outFile.Close() }()
 
 	if err := WriteCSVRecords(outFile, records, c.StripCSVHeader, c.Shuffle); err != nil {
 		return fmt.Errorf("WriteCSVRecords(%q): %w", outFile.Name(), err)

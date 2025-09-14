@@ -55,9 +55,7 @@ func ankiCmd(ctx context.Context, filename string, maxWorkers int, profile strin
 	if err != nil {
 		return fmt.Errorf("failed to open file(%q): %v", filename, err)
 	}
-	defer func() {
-		_ = f.Close()
-	}()
+	defer func() { _ = f.Close() }()
 
 	runner, err := anki.NewRunner(profile, anki.WithMaxWorkers(maxWorkers))
 	if err != nil {

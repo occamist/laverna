@@ -32,7 +32,7 @@ func TestBatchRunner(t *testing.T) {
 				{Text: "test2", Voice: EnglishVoice},
 			},
 			saveFn: func(text string, audio []byte) error {
-				return os.WriteFile(filepath.Join(temp, text+".mp3"), audio, 0600)
+				return os.WriteFile(filepath.Join(temp, text+".mp3"), audio, 0o600)
 			},
 			wantAudios: []string{
 				filepath.Join(temp, "test1.mp3"),

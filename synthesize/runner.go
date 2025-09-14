@@ -26,7 +26,7 @@ func NewRunner(opts ...RunnerOption) *Runner {
 		client:     http.DefaultClient,
 		maxWorkers: runtime.GOMAXPROCS(0),
 		save: func(filename string, audio []byte) error {
-			return os.WriteFile(filename+".mp3", audio, 0600)
+			return os.WriteFile(filename+".mp3", audio, 0o600)
 		},
 	}
 
