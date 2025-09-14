@@ -67,7 +67,7 @@ func TestAnkiMediaPath(t *testing.T) {
 				tt.setupEnv(t)
 			}
 
-			got, err := ankiMediaPath(tt.profile, tt.goos)
+			got, err := MediaPath(tt.profile, tt.goos)
 			if !cmp.Equal(tt.wantErr, err, cmpopts.EquateErrors()) {
 				if !cmp.Equal(err.Error(), tt.wantErr.Error()) {
 					t.Errorf("ankiMediaPath(%q, %q): wantErr=%v gotErr=%v", tt.profile, tt.goos, tt.wantErr, err)

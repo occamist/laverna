@@ -287,7 +287,7 @@ func TestWriteCSVRecords(t *testing.T) {
 		wantErr        error
 	}{
 		{
-			name: "write with records with header",
+			name: "write with records",
 			records: []Record{
 				{
 					Text:        "ฉันชอบ{{c1::ฟัง}}เพลง",
@@ -303,7 +303,7 @@ func TestWriteCSVRecords(t *testing.T) {
 					AudioAnswer: "[sound:e.mp3]",
 				},
 			},
-			stripCSVHeader: false,
+			stripCSVHeader: true,
 			want:           string(raw),
 		},
 		{

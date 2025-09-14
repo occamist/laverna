@@ -18,7 +18,8 @@ import (
 	"github.com/mrwormhole/laverna/synthesize"
 )
 
-func ankiMediaPath(profile string, goos string) (string, error) {
+// MediaPath returns the Anki media path based on the profile name and the OS(runtime.GOOS)
+func MediaPath(profile string, goos string) (string, error) {
 	switch goos {
 	case "windows": // %APPDATA%\Anki2\<profile>\collection.media
 		appData := os.Getenv("APPDATA")
@@ -59,7 +60,7 @@ func NewRunner(profile string, opts ...RunnerOption) (*Runner, error) {
 		client:     http.DefaultClient,
 		maxWorkers: runtime.GOMAXPROCS(0),
 	}
-	path, err := ankiMediaPath(profile, runtime.GOOS)
+	path, err := MediaPath(profile, runtime.GOOS)
 	if err != nil {
 		return nil, fmt.Errorf("ankiMediaPath(%q, %q): %w", profile, runtime.GOOS, err)
 	}
