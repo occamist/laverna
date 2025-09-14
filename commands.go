@@ -39,7 +39,7 @@ func runCmd(ctx context.Context, filename string, maxWorkers int) error {
 
 	runner := synthesize.NewRunner(synthesize.WithMaxWorkers(maxWorkers))
 	if err := runner.Run(ctx, opts); err != nil {
-		return fmt.Errorf("failed to run: %v", err)
+		return fmt.Errorf("failed to run: %w", err)
 	}
 
 	return nil
@@ -62,7 +62,7 @@ func ankiCmd(ctx context.Context, filename string, maxWorkers int, profile strin
 		return fmt.Errorf("failed to make runner: %v", err)
 	}
 	if err := runner.Run(ctx, f, cfg); err != nil {
-		return fmt.Errorf("failed to run: %v", err)
+		return fmt.Errorf("failed to run: %w", err)
 	}
 
 	return nil

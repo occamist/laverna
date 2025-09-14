@@ -78,7 +78,6 @@ Text,HelperText,TextA,TextB,TextC,TextD
 Now you will see a new result as below CSV file, all of your media is generated and inserted into Anki, however in order to create a deck in Anki, you need to import CSV below. And carefully choose comma delimiter with note type "Cloze Multi Choice Audio"
 
 ```csv
-Text,HelperText,TextA,TextB,TextC,TextD,AudioA,AudioB,AudioC,AudioD,AudioAnswer
 ฉันชอบ{{c1::ฟัง}}เพลง,I like to listen to music,ฟัง,เล่น,ดู,อ่าน,[sound:a.mp3],[sound:b.mp3],[sound:c.mp3],[sound:d.mp3],[sound:e.mp3]
 ```
 
