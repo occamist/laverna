@@ -11,6 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+
 	"github.com/mrwormhole/laverna/anki"
 )
 
@@ -18,13 +19,14 @@ func writeTempFile(t *testing.T, content string, filename string) string {
 	t.Helper()
 	tmp := t.TempDir()
 	fp := filepath.Join(tmp, filename)
-	if err := os.WriteFile(fp, []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(fp, []byte(content), 0o600); err != nil {
 		t.Fatalf("os.WriteFile(%q): %v", fp, err)
 	}
 	return fp
 }
 
 func makeAnkiMediaPath(t *testing.T, profile string) {
+	t.Helper()
 	fp, err := anki.MediaPath(profile, runtime.GOOS)
 	if err != nil {
 		t.Fatalf("anki.MediaPath(%q, %q): %v", profile, runtime.GOOS, err)
@@ -35,6 +37,7 @@ func makeAnkiMediaPath(t *testing.T, profile string) {
 }
 
 func TestAnkiCmd(t *testing.T) {
+	t.Parallel()
 	const (
 		maxWorkers = 20
 	)
@@ -51,7 +54,7 @@ func TestAnkiCmd(t *testing.T) {
 			name:     "successful run with default profile",
 			profile:  "default",
 			filename: "thai.csv",
-			setup: func(t *testing.T, filename string) string {
+			setup: func(t *testing.T, filename string) string { //nolint:thelper // this is inline test helper
 				makeAnkiMediaPath(t, "default")
 				raw, err := os.ReadFile("testdata/anki-th-example.csv")
 				if err != nil {
@@ -71,7 +74,7 @@ func TestAnkiCmd(t *testing.T) {
 			name:     "unknown voice in run config",
 			profile:  "default",
 			filename: "thai.csv",
-			setup: func(t *testing.T, filename string) string {
+			setup: func(t *testing.T, filename string) string { //nolint:thelper // this is inline test helper
 				makeAnkiMediaPath(t, "default")
 				raw, err := os.ReadFile("testdata/anki-th-example.csv")
 				if err != nil {
@@ -92,7 +95,7 @@ func TestAnkiCmd(t *testing.T) {
 			name:     "no anki media path",
 			profile:  "unexistent profile",
 			filename: "thai.csv",
-			setup: func(t *testing.T, filename string) string {
+			setup: func(t *testing.T, filename string) string { //nolint:thelper // this is inline test helper
 				raw, err := os.ReadFile("testdata/anki-th-example.csv")
 				if err != nil {
 					t.Fatalf("os.ReadFile(): %v", err)
@@ -112,7 +115,7 @@ func TestAnkiCmd(t *testing.T) {
 			name:     "empty CSV file",
 			profile:  "default",
 			filename: "thai.csv",
-			setup: func(t *testing.T, filename string) string {
+			setup: func(t *testing.T, filename string) string { //nolint:thelper // this is inline test helper
 				makeAnkiMediaPath(t, "default")
 				return writeTempFile(t, "", filename)
 			},
@@ -123,6 +126,7 @@ func TestAnkiCmd(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			tt.filename = tt.setup(t, tt.filename)
 			err := ankiCmd(t.Context(), tt.filename, maxWorkers, tt.profile, tt.cfg)
 			if !cmp.Equal(tt.wantErr, err, cmpopts.EquateErrors()) {
