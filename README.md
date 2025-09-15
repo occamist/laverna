@@ -1,7 +1,7 @@
 # Laverna
 
 [![Version](https://img.shields.io/github/tag/mrwormhole/laverna.svg)](https://github.com/mrwormhole/laverna/tags)
-[![CI Build](https://github.com/mrwormhole/laverna/actions/workflows/tests.yaml/badge.svg)](https://github.com/mrwormhole/laverna/actions/workflows/tests.yaml)
+[![CI](https://github.com/mrwormhole/laverna/actions/workflows/main.yaml/badge.svg)](https://github.com/mrwormhole/laverna/actions/workflows/main.yaml)
 [![GoDoc](https://godoc.org/github.com/mrwormhole/laverna?status.svg)](https://godoc.org/github.com/mrwormhole/laverna)
 [![Report Card](https://goreportcard.com/badge/github.com/mrwormhole/laverna)](https://goreportcard.com/report/github.com/mrwormhole/laverna)
 [![License](https://img.shields.io/github/license/mrwormhole/laverna)](https://github.com/mrwormhole/laverna/blob/main/LICENSE)
