@@ -24,12 +24,9 @@ jobs:
           version: v2.4.0
 
       - name: Test
-        run: go test -race -covermode atomic -coverprofile=covprofile -v ./...
-
-      - name: Install Goveralls
-        run: go install github.com/mattn/goveralls@v0.0.12
+        run: go test -race -covermode atomic -coverprofile=coverage.txt -v ./...
 
       - name: Upload Coverage
-        env:
-          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: goveralls -ignore=cmd/**/*.go -coverprofile=covprofile -service=github
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
