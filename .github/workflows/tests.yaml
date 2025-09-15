@@ -1,4 +1,4 @@
-name: Tests
+name: CI
 
 on:
   push:
@@ -29,7 +29,7 @@ jobs:
       - name: Install Goveralls
         run: go install github.com/mattn/goveralls@v0.0.12
 
-      # - name: Upload Coverage
-      #   env:
-      #     COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: goveralls -ignore=cmd/**/*.go -coverprofile=covprofile -service=github
+      - name: Upload Coverage
+        env:
+          COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: goveralls -ignore=cmd/**/*.go -coverprofile=covprofile -service=github
