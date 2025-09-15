@@ -128,7 +128,13 @@ func TestAnkiCmd(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			tt.filename = tt.setup(t, tt.filename)
-			err := ankiCmd(t.Context(), tt.filename, maxWorkers, tt.profile, tt.cfg)
+
+			err := ankiCmd(t.Context(), ankiCmdFlags{
+				Filename:   tt.filename,
+				MaxWorkers: maxWorkers,
+				Profile:    tt.profile,
+				Config:     tt.cfg,
+			})
 			if !cmp.Equal(tt.wantErr, err, cmpopts.EquateErrors()) {
 				if !cmp.Equal(strings.Contains(err.Error(), tt.wantErr.Error()), true) {
 					t.Errorf("ankiCmd(%q, %d, %q, %v): wantErr=%v gotErr=%v", tt.filename, maxWorkers, tt.profile, tt.cfg, tt.wantErr, err)
@@ -168,8 +174,11 @@ func TestAnkiCmd_FileExtensions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ankiCmd(t.Context(), tt.filename, maxWorkers, profile, anki.RunConfig{})
-
+			err := ankiCmd(t.Context(), ankiCmdFlags{
+				Filename:   tt.filename,
+				MaxWorkers: maxWorkers,
+				Profile:    profile,
+			})
 			if !cmp.Equal(tt.wantErr, err, cmpopts.EquateErrors()) {
 				if err == nil || !strings.Contains(err.Error(), tt.wantErr.Error()) {
 					t.Errorf("ankiCmd(%q, %d, %q, cfg): wantErr=%v gotErr=%v", tt.filename, maxWorkers, profile, tt.wantErr, err)
@@ -185,8 +194,12 @@ func TestAnkiCmd_FileNotFound(t *testing.T) {
 		maxWorkers = 1
 		filename   = "nonexistent.csv"
 	)
-	err := ankiCmd(t.Context(), filename, maxWorkers, profile, anki.RunConfig{})
 
+	err := ankiCmd(t.Context(), ankiCmdFlags{
+		Filename:   filename,
+		MaxWorkers: maxWorkers,
+		Profile:    profile,
+	})
 	wantErr := errors.New(`failed to open file("nonexistent.csv"): open nonexistent.csv: no such file or directory`)
 	if !cmp.Equal(wantErr, err, cmpopts.EquateErrors()) {
 		if !cmp.Equal(wantErr.Error(), err.Error()) {

@@ -45,7 +45,10 @@ func main() {
 				Name:  "run",
 				Usage: "Downloads audios",
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					return runCmd(ctx, cmd.String("file"), cmd.Int("workers"))
+					return runCmd(ctx, runCmdFlags{
+						Filename:   cmd.String("file"),
+						MaxWorkers: cmd.Int("workers"),
+					})
 				},
 			},
 			{
@@ -97,14 +100,18 @@ func main() {
 					dir, filename := filepath.Dir(cmd.String("file")), "A"+filepath.Base(cmd.String("file"))
 					outFilename := filepath.Join(dir, filename)
 
-					cfg := anki.RunConfig{
-						Speed:          cmd.String("speed"),
-						Voice:          cmd.String("voice"),
-						OutFilename:    outFilename,
-						Shuffle:        cmd.Bool("shuffle"),
-						StripCSVHeader: cmd.Bool("strip-csv-header"),
-					}
-					return ankiCmd(ctx, cmd.String("file"), cmd.Int("workers"), cmd.String("profile"), cfg)
+					return ankiCmd(ctx, ankiCmdFlags{
+						Filename:   cmd.String("file"),
+						MaxWorkers: cmd.Int("workers"),
+						Profile:    cmd.String("profile"),
+						Config: anki.RunConfig{
+							Speed:          cmd.String("speed"),
+							Voice:          cmd.String("voice"),
+							OutFilename:    outFilename,
+							Shuffle:        cmd.Bool("shuffle"),
+							StripCSVHeader: cmd.Bool("strip-csv-header"),
+						},
+					})
 				},
 			},
 		},

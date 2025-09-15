@@ -11,16 +11,21 @@ import (
 	"github.com/mrwormhole/laverna/synthesize"
 )
 
-func runCmd(ctx context.Context, filename string, maxWorkers int) error {
-	isYAML := strings.HasSuffix(filename, ".yaml") || strings.HasSuffix(filename, ".yml")
-	isCSV := strings.HasSuffix(filename, ".csv")
+type runCmdFlags struct {
+	Filename   string
+	MaxWorkers int
+}
+
+func runCmd(ctx context.Context, f runCmdFlags) error {
+	isYAML := strings.HasSuffix(f.Filename, ".yaml") || strings.HasSuffix(f.Filename, ".yml")
+	isCSV := strings.HasSuffix(f.Filename, ".csv")
 	if !isYAML && !isCSV {
 		return errors.New("file format must be yaml/yml or csv")
 	}
 
-	raw, err := os.ReadFile(filename) //nolint:gosec // file inclusion is intended
+	raw, err := os.ReadFile(f.Filename)
 	if err != nil {
-		return fmt.Errorf("failed to read file(%q): %v", filename, err)
+		return fmt.Errorf("failed to read file(%q): %v", f.Filename, err)
 	}
 
 	var opts []synthesize.Opt
@@ -37,7 +42,7 @@ func runCmd(ctx context.Context, filename string, maxWorkers int) error {
 		}
 	}
 
-	runner := synthesize.NewRunner(synthesize.WithMaxWorkers(maxWorkers))
+	runner := synthesize.NewRunner(synthesize.WithMaxWorkers(f.MaxWorkers))
 	if err := runner.Run(ctx, opts); err != nil {
 		return fmt.Errorf("failed to run: %w", err)
 	}
@@ -45,23 +50,30 @@ func runCmd(ctx context.Context, filename string, maxWorkers int) error {
 	return nil
 }
 
-func ankiCmd(ctx context.Context, filename string, maxWorkers int, profile string, cfg anki.RunConfig) error {
-	isCSV := strings.HasSuffix(filename, ".csv")
+type ankiCmdFlags struct {
+	Filename   string
+	MaxWorkers int
+	Profile    string
+	Config     anki.RunConfig
+}
+
+func ankiCmd(ctx context.Context, f ankiCmdFlags) error {
+	isCSV := strings.HasSuffix(f.Filename, ".csv")
 	if !isCSV {
 		return errors.New("file format must be csv")
 	}
 
-	f, err := os.Open(filename) //nolint:gosec // file inclusion is intended
+	file, err := os.Open(f.Filename)
 	if err != nil {
-		return fmt.Errorf("failed to open file(%q): %v", filename, err)
+		return fmt.Errorf("failed to open file(%q): %v", f.Filename, err)
 	}
-	defer func() { _ = f.Close() }()
+	defer func() { _ = file.Close() }()
 
-	runner, err := anki.NewRunner(profile, anki.WithMaxWorkers(maxWorkers))
+	runner, err := anki.NewRunner(f.Profile, anki.WithMaxWorkers(f.MaxWorkers))
 	if err != nil {
 		return fmt.Errorf("failed to make runner: %v", err)
 	}
-	if err := runner.Run(ctx, f, cfg); err != nil {
+	if err := runner.Run(ctx, file, f.Config); err != nil {
 		return fmt.Errorf("failed to run: %w", err)
 	}
 
