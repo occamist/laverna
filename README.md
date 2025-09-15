@@ -2,10 +2,10 @@
 
 [![Version](https://img.shields.io/github/tag/mrwormhole/laverna.svg)](https://github.com/mrwormhole/laverna/tags)
 [![CI](https://github.com/mrwormhole/laverna/actions/workflows/main.yaml/badge.svg)](https://github.com/mrwormhole/laverna/actions/workflows/main.yaml)
-[![GoDoc](https://godoc.org/github.com/mrwormhole/laverna?status.svg)](https://godoc.org/github.com/mrwormhole/laverna)
+[![Godoc](https://godoc.org/github.com/mrwormhole/laverna?status.svg)](https://godoc.org/github.com/mrwormhole/laverna)
 [![Report Card](https://goreportcard.com/badge/github.com/mrwormhole/laverna)](https://goreportcard.com/report/github.com/mrwormhole/laverna)
 [![License](https://img.shields.io/github/license/mrwormhole/laverna)](https://github.com/mrwormhole/laverna/blob/main/LICENSE)
-[![Coverage Status](https://coveralls.io/repos/github/mrwormhole/laverna/badge.svg?branch=main)](https://coveralls.io/github/mrwormhole/laverna?branch=main)
+[![Codecov](https://codecov.io/github/mrwormhole/laverna/graph/badge.svg?token=HUR58C4DFN)](https://codecov.io/github/mrwormhole/laverna)
 
 the goddess of the thieves, helps you steal translation speeches from the G-daddy monopoly.
 
