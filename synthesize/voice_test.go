@@ -4,7 +4,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/mrwormhole/errdiff"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 var testVoices = []Voice{
@@ -104,8 +105,8 @@ func TestRun_AllVoices(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			audio, err := Run(t.Context(), tt.client, tt.opt)
-			if diff := errdiff.Check(err, tt.wantErr); diff != "" {
-				t.Errorf("Run(%v): err diff=\n%s", tt.opt, diff)
+			if !cmp.Equal(tt.wantErr, err, cmpopts.EquateErrors()) {
+				t.Errorf("Run(%v): wantErr=%v, gotErr=%v", tt.opt, tt.wantErr, err)
 			}
 
 			if len(audio) < 1 {

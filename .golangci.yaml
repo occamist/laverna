@@ -103,6 +103,7 @@ formatters:
     - gci
     - gofmt
     - goimports
+    - gofumpt
   settings:
     gci:
       sections:

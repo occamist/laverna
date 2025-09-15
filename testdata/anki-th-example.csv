@@ -1,0 +1,4 @@
+Text,HelperText,TextA,TextB,TextC,TextD
+ฉันชอบ{{c1::ฟัง}}เพลง,I like to listen to music,ฟัง,เล่น,ดู,อ่าน
+เขา{{c1::เล่น}}ฟุตบอลทุกวัน,He plays football every day,เล่น,ฟัง,ดู,อ่าน
+คุณ{{c1::อ่าน}}หนังสือนี้ไหม,Do you read this book,อ่าน,ฟัง,เล่น,ดู

@@ -8,7 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/mrwormhole/errdiff"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestBatchRunner(t *testing.T) {
@@ -31,7 +32,7 @@ func TestBatchRunner(t *testing.T) {
 				{Text: "test2", Voice: EnglishVoice},
 			},
 			saveFn: func(text string, audio []byte) error {
-				return os.WriteFile(filepath.Join(temp, text+".mp3"), audio, 0600)
+				return os.WriteFile(filepath.Join(temp, text+".mp3"), audio, 0o600)
 			},
 			wantAudios: []string{
 				filepath.Join(temp, "test1.mp3"),
@@ -67,15 +68,15 @@ func TestBatchRunner(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runner := NewBatchRunner(
+			runner := NewRunner(
 				WithClient(&http.Client{}),
 				WithMaxWorkers(maxWorkers),
 				WithSaveFunc(tt.saveFn),
 			)
 
 			err := runner.Run(tt.ctx, tt.opts)
-			if diff := errdiff.Check(err, tt.wantErr); diff != "" {
-				t.Errorf("%T.Run(): err diff=\n%s", runner, diff)
+			if !cmp.Equal(tt.wantErr, err, cmpopts.EquateErrors()) {
+				t.Errorf("%T.Run(): wantErr=%v, gotErr=%v", runner, tt.wantErr, err)
 			}
 
 			for _, wantAudio := range tt.wantAudios {

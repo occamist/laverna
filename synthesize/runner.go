@@ -10,58 +10,58 @@ import (
 	"github.com/sourcegraph/conc/pool"
 )
 
-type SaveFn func(string, []byte) error
+// SaveFn is function that allows additional save step for BatchRunner's per run
+type SaveFn func(filename string, audio []byte) error
 
-// BatchRunner handles concurrent processing of synthesize operations
-type BatchRunner struct {
+// Runner handles concurrent processing of synthesize operations
+type Runner struct {
 	client     *http.Client
 	maxWorkers int
 	save       SaveFn
 }
 
-// NewBatchRunner creates a new BatchRunner with the given options
-func NewBatchRunner(opts ...BatchRunnerOption) *BatchRunner {
-	r := &BatchRunner{
+// NewRunner creates a new Runner with the given options
+func NewRunner(opts ...RunnerOption) *Runner {
+	r := &Runner{
 		client:     http.DefaultClient,
 		maxWorkers: runtime.GOMAXPROCS(0),
-		save: func(text string, audio []byte) error {
-			return os.WriteFile(text+".mp3", audio, 0600)
+		save: func(filename string, audio []byte) error {
+			return os.WriteFile(filename+".mp3", audio, 0o600)
 		},
 	}
 
 	for _, opt := range opts {
 		opt(r)
 	}
-
 	return r
 }
 
-// BatchRunnerOption configures a BatchRunner
-type BatchRunnerOption func(*BatchRunner)
+// RunnerOption configures a Runner
+type RunnerOption func(*Runner)
 
 // WithClient sets the HTTP client
-func WithClient(c *http.Client) BatchRunnerOption {
-	return func(r *BatchRunner) {
+func WithClient(c *http.Client) RunnerOption {
+	return func(r *Runner) {
 		r.client = c
 	}
 }
 
 // WithMaxWorkers sets the maximum number of concurrent workers
-func WithMaxWorkers(n int) BatchRunnerOption {
-	return func(r *BatchRunner) {
+func WithMaxWorkers(n int) RunnerOption {
+	return func(r *Runner) {
 		r.maxWorkers = n
 	}
 }
 
 // WithSaveFunc sets custom save function
-func WithSaveFunc(fn SaveFn) BatchRunnerOption {
-	return func(r *BatchRunner) {
+func WithSaveFunc(fn SaveFn) RunnerOption {
+	return func(r *Runner) {
 		r.save = fn
 	}
 }
 
 // Run runs given opts concurrently and stops if encounters an error
-func (r *BatchRunner) Run(ctx context.Context, opts []Opt) error {
+func (r *Runner) Run(ctx context.Context, opts []Opt) error {
 	p := pool.New().WithContext(ctx).WithMaxGoroutines(r.maxWorkers)
 
 	for _, opt := range opts {
@@ -72,7 +72,7 @@ func (r *BatchRunner) Run(ctx context.Context, opts []Opt) error {
 			}
 
 			if err := r.save(opt.Text, audio); err != nil {
-				return fmt.Errorf("%T.SaveFunc(%v): %w", p, opt.Text, err)
+				return fmt.Errorf("%T.save(%v): %w", p, opt.Text, err)
 			}
 			return nil
 		})

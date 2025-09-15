@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/mrwormhole/errdiff"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestRun(t *testing.T) {
@@ -47,8 +47,8 @@ func TestRun(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			audio, err := Run(t.Context(), tt.client, tt.opt)
-			if diff := errdiff.Check(err, tt.wantErr); diff != "" {
-				t.Errorf("Run(%v): err diff=\n%s", tt.opt, diff)
+			if !cmp.Equal(tt.wantErr, err, cmpopts.EquateErrors()) {
+				t.Errorf("Run(%v): wantErr=%v, gotErr=%v", tt.opt, tt.wantErr, err)
 			}
 			if !cmp.Equal(tt.wantBytes, len(audio)) {
 				t.Errorf("Run(%v): want bytes(%d) not equal to got bytes(%d)", tt.opt, tt.wantBytes, len(audio))
@@ -103,8 +103,8 @@ func TestUnmarshalYAML(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := UnmarshalYAML(tt.rawYAML())
-			if diff := errdiff.Check(err, tt.wantErr); diff != "" {
-				t.Errorf("UnmarshalYAML(): err diff=\n%s", diff)
+			if !cmp.Equal(tt.wantErr, err, cmpopts.EquateErrors()) {
+				t.Errorf("UnmarshalYAML(): wantErr=%v, gotErr=%v", tt.wantErr, err)
 			}
 
 			if diff := cmp.Diff(tt.wantOpts, got); diff != "" {
@@ -181,8 +181,10 @@ func TestUnmarshalCSV(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := UnmarshalCSV(tt.rawCSV())
-			if diff := errdiff.Check(err, tt.wantErr); diff != "" {
-				t.Errorf("UnmarshalYAML(): err diff=\n%s", diff)
+			if !cmp.Equal(tt.wantErr, err, cmpopts.EquateErrors()) {
+				if !cmp.Equal(tt.wantErr.Error(), err.Error()) {
+					t.Errorf("UnmarshalYAML(): wantErr=%v, gotErr=%v", tt.wantErr, err)
+				}
 			}
 
 			if diff := cmp.Diff(tt.wantOpts, got); diff != "" {
