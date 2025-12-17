@@ -1,0 +1,28 @@
+[project]
+name = "addon"
+version = "0.1.0"
+description = "Laverna Addon for Anki Application"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "aqt[qt]>=25.9.2",
+    "flask>=3.1.2",
+    "types-waitress>=3.0.1.20250801",
+    "waitress>=3.0.2",
+]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.1",
+    "pytest>=9.0.2",
+    "ruff>=0.14.9",
+]
+
+[tool.mypy]
+python_version = "3.13"
+pretty = true
+no_strict_optional = true
+show_error_codes = true
+# exclude = "abc"
+check_untyped_defs = true
+disallow_untyped_defs = true

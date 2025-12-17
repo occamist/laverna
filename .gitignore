@@ -2,3 +2,5 @@
 .idea/
 .code/
 main
+__pycache__
+addon.log
