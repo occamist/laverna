@@ -1,15 +1,44 @@
+from concurrent.futures import Future
+from contextlib import contextmanager
+from http import HTTPStatus
+import logging
+import os
+from pathlib import Path
+import tempfile
+from threading import Thread
+from typing import Iterator
+
+from anki.collection import (
+    NotetypeDict,
+    ImportCsvRequest,
+    Delimiter,
+    ImportLogWithChanges,
+    CsvMetadata,
+)
+from aqt import mw, gui_hooks, appVersion
+from flask import Flask, jsonify, request, Response, Blueprint
+from waitress.server import create_server
+
+
+MODEL_NAME = "Cloze Multi Choice Audio"
+
+DEFAULT_ADDRESS = "127.0.0.1"
+DEFAULT_PORT = 5555
+
+
+@contextmanager
+def temp_csv_file(csv_data: str) -> Iterator[str]:
+    tmp = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".csv", newline="")
+    try:
+        tmp.write(csv_data)
+        tmp.close()
+        yield tmp.name
+    finally:
+        os.unlink(tmp.name)
+
+
 # when run inside Anki, __name__ variable would be numeric value (addon ID)
 if __name__ != "addon":
-    import atexit
-    import logging
-    import threading
-    from pathlib import Path
-
-    from aqt import mw
-    from flask import Flask, jsonify, request, Response
-    from waitress.server import create_server
-
-    # Configure logging to file only, Anki shows stderr as error popups!
     addon_dir = Path(__file__).parent
     log_file = addon_dir / "addon.log"
     logging.basicConfig(
@@ -20,7 +49,10 @@ if __name__ != "addon":
         force=True,
     )
     logger = logging.getLogger(__name__)
-    logger.info("addon initializing...")
+
+    cfg = mw.addonManager.getConfig(__name__) or {}
+    if not cfg:
+        logger.fatal("config is empty")
 
     app = Flask(__name__)
 
@@ -29,24 +61,111 @@ if __name__ != "addon":
         logger.info(f"{request.method} {request.path}")
 
     @app.route("/")
-    def index() -> Response:
-        return jsonify({"status": "healthy"})
+    def index() -> tuple[Response, HTTPStatus]:
+        res: dict = {
+            "status": "healthy",
+            "minimum_required_anki_app_version": appVersion,
+        }
+        return jsonify(res), HTTPStatus.OK
 
-    @app.route("/cards/count")
-    def card_count() -> Response:
-        count = mw.col.card_count()
-        return jsonify({"card_count": count})
+    # API v1 Blueprint with version prefix
+    api_v1 = Blueprint("api_v1", __name__, url_prefix="/v1")
 
-    srv = create_server(app, host="127.0.0.1", port=5000)
+    @api_v1.route("/import-csv", methods=["POST"])
+    def import_csv() -> tuple[Response, HTTPStatus]:
+        if request.content_type != "text/csv":
+            return jsonify(
+                {"message": f"Content-type '{request.content_type}' must be 'text/csv'"}
+            ), HTTPStatus.BAD_REQUEST
+
+        profile = request.args.get("profile", default=None)
+        if profile is None or profile.strip() == "":
+            return jsonify(
+                {"message": "Missing 'profile' query parameter"}
+            ), HTTPStatus.BAD_REQUEST
+
+        deck_name = request.args.get("deck", default=None)
+        if deck_name is None or deck_name.strip() == "":
+            return jsonify(
+                {"message": "Missing 'deck' query parameter"}
+            ), HTTPStatus.BAD_REQUEST
+
+        raw: str = request.data.decode()
+        future: Future = Future()
+
+        def execute() -> None:
+            try:
+                if profile not in mw.pm.profiles():
+                    future.set_result((None, f"Profile '{profile}' does not exist"))
+                    return
+
+                mw.pm.load(profile)
+                col = mw.col
+                if col is None:
+                    future.set_result((None, "Failed to load collection"))
+                    return
+
+                model: NotetypeDict | None = col.models.by_name(MODEL_NAME)
+                if model is None:
+                    # we should create the model for Lamia as a fallback and not fail here
+                    future.set_result((None, f"Model '{MODEL_NAME}' does not exist"))
+                    return
+
+                # just checking what kind of model we want to create so that I can delete note-type.apkg and change README.md
+                for k, v in model.items():
+                    logger.info(f"{MODEL_NAME} = {k} - {v}")
+
+                deck_id = col.decks.id(deck_name, create=True)
+
+                # think about existing notes and match scopes of CsvMetadata during import
+                with temp_csv_file(raw) as path:
+                    # metadata: CsvMetadata = col.get_csv_metadata(
+                    #     path=path, delimiter=Delimiter.COMMA
+                    # )
+                    # import_request: ImportCsvRequest = ImportCsvRequest(
+                    #     path=path, metadata=metadata
+                    # )
+                    # response: ImportLogWithChanges = col.import_csv(import_request)
+
+                    # res = {
+                    #     "found_notes": response.log.found_notes,
+                    #     "updated_notes": list(response.log.updated),
+                    #     "new_notes": list(response.log.new),
+                    # }
+                    pass
+
+                future.set_result((None, None))
+            except Exception as e:
+                logger.exception("Error in execute_on_main")
+                # this freaking propagates exception to another toxic try/catch above stack level
+                future.set_exception(e)
+
+        # run on main thread of Anki to avoid SQLite threading issues
+        mw.taskman.run_on_main(execute)
+
+        # block and wait for the result
+        (res, err) = future.result()
+        if err is not None:
+            return jsonify({"message": err}), HTTPStatus.INTERNAL_SERVER_ERROR
+
+        return jsonify({"message": "Not implemented yet"}), HTTPStatus.NOT_IMPLEMENTED
+
+    address: str = cfg.get("address", DEFAULT_ADDRESS)
+    port: int = cfg.get("port", DEFAULT_PORT)
+
+    app.register_blueprint(api_v1)
+    srv = create_server(app, host=address, port=port)
+
     def run_srv() -> None:
-        logger.info("HTTP server running on http://127.0.0.1:5000")
+        logger.info(f"HTTP server running on http://{address}:{port}")
         srv.run()
 
     def shutdown_srv() -> None:
         srv.close()
         logger.info("HTTP server shutdown successfully")
-    atexit.register(shutdown_srv)
 
-    th = threading.Thread(target=run_srv, daemon=True)
+    gui_hooks.profile_will_close.append(shutdown_srv)
+
+    th = Thread(target=run_srv, daemon=True)
     th.start()
     logger.info("addon initialized successfully")
