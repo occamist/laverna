@@ -34,7 +34,7 @@ def temp_csv_file(csv_data: str) -> Iterator[str]:
         tmp.close()
         yield tmp.name
     finally:
-        os.unlink(tmp.name)
+        os.remove(tmp.name)
 
 
 # when run inside Anki, __name__ variable would be numeric value (addon ID)
@@ -78,13 +78,13 @@ if __name__ != "addon":
                 {"message": f"Content-type '{request.content_type}' must be 'text/csv'"}
             ), HTTPStatus.BAD_REQUEST
 
-        profile = request.args.get("profile", default=None)
+        profile: str | None = request.args.get("profile", default=None)
         if profile is None or profile.strip() == "":
             return jsonify(
                 {"message": "Missing 'profile' query parameter"}
             ), HTTPStatus.BAD_REQUEST
 
-        deck_name = request.args.get("deck", default=None)
+        deck_name: str | None = request.args.get("deck", default=None)
         if deck_name is None or deck_name.strip() == "":
             return jsonify(
                 {"message": "Missing 'deck' query parameter"}
@@ -94,61 +94,71 @@ if __name__ != "addon":
         future: Future = Future()
 
         def execute() -> None:
-            try:
-                if profile not in mw.pm.profiles():
-                    future.set_result((None, f"Profile '{profile}' does not exist"))
-                    return
+            if profile not in mw.pm.profiles():
+                future.set_result((None, f"Profile '{profile}' does not exist"))
+                return
 
+            current_profile = mw.pm.name
+            if current_profile != profile:
+                if mw.col:
+                    mw.col.close()
+                    mw.col = None
                 mw.pm.load(profile)
-                col = mw.col
-                if col is None:
-                    future.set_result((None, "Failed to load collection"))
-                    return
+                mw.loadProfile()
+                mw.reset()
+                mw.deckBrowser.show()
 
-                model: NotetypeDict | None = col.models.by_name(MODEL_NAME)
-                if model is None:
-                    # we should create the model for Lamia as a fallback and not fail here
-                    future.set_result((None, f"Model '{MODEL_NAME}' does not exist"))
-                    return
+            col = mw.col
+            if col is None:
+                future.set_result((None, "Failed to load collection"))
+                return
 
-                # just checking what kind of model we want to create so that I can delete note-type.apkg and change README.md
-                for k, v in model.items():
-                    logger.info(f"{MODEL_NAME} = {k} - {v}")
+            model: NotetypeDict | None = col.models.by_name(MODEL_NAME)
+            if model is None:
+                # TODO: we should create the model for Lamia as a fallback and not fail here
+                future.set_result(
+                    (
+                        None,
+                        f"Model '{MODEL_NAME}' does not exist, please download and create the notetype first (https://github.com/mrwormhole/laverna/blob/main/note-type.apkg)",
+                    )
+                )
+                return
 
-                deck_id = col.decks.id(deck_name, create=True)
+            deck_id = col.decks.id(deck_name, create=True)
 
-                # think about existing notes and match scopes of CsvMetadata during import
-                with temp_csv_file(raw) as path:
-                    # metadata: CsvMetadata = col.get_csv_metadata(
-                    #     path=path, delimiter=Delimiter.COMMA
-                    # )
-                    # import_request: ImportCsvRequest = ImportCsvRequest(
-                    #     path=path, metadata=metadata
-                    # )
-                    # response: ImportLogWithChanges = col.import_csv(import_request)
+            with temp_csv_file(raw) as path:
+                # CsvMetadata PB defined here https://github.com/ankitects/anki/blob/main/proto/anki/import_export.proto#L148
+                md: CsvMetadata = col.get_csv_metadata(
+                    path=path, delimiter=Delimiter.COMMA
+                )
+                md.deck_id = deck_id
+                md.global_notetype.id = model["id"]
+                md.global_notetype.field_columns[:] = list(
+                    range(1, len(model["flds"]) + 1)
+                )
+                md.tags_column = 0  # no tags column
+                md.dupe_resolution = CsvMetadata.DupeResolution.UPDATE
+                md.match_scope = CsvMetadata.MatchScope.NOTETYPE_AND_DECK
+                req: ImportCsvRequest = ImportCsvRequest(path=path, metadata=md)
+                resp: ImportLogWithChanges = col.import_csv(req)
+                mw.reset()
+                mw.deckBrowser.show()
+                res = {
+                    "found_notes": resp.log.found_notes,
+                    "updated_notes": len(list(resp.log.updated)),
+                    "new_notes": len(list(resp.log.new)),
+                }
 
-                    # res = {
-                    #     "found_notes": response.log.found_notes,
-                    #     "updated_notes": list(response.log.updated),
-                    #     "new_notes": list(response.log.new),
-                    # }
-                    pass
-
-                future.set_result((None, None))
-            except Exception as e:
-                logger.exception("Error in execute_on_main")
-                # this freaking propagates exception to another toxic try/catch above stack level
-                future.set_exception(e)
+            future.set_result((res, None))
 
         # run on main thread of Anki to avoid SQLite threading issues
         mw.taskman.run_on_main(execute)
 
-        # block and wait for the result
+        # block & wait for the result
         (res, err) = future.result()
         if err is not None:
             return jsonify({"message": err}), HTTPStatus.INTERNAL_SERVER_ERROR
-
-        return jsonify({"message": "Not implemented yet"}), HTTPStatus.NOT_IMPLEMENTED
+        return jsonify(res), HTTPStatus.OK
 
     address: str = cfg.get("address", DEFAULT_ADDRESS)
     port: int = cfg.get("port", DEFAULT_PORT)
