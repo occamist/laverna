@@ -68,16 +68,10 @@ func main() {
 						},
 					},
 					&cli.StringFlag{
-						Name:     "deck",
-						Aliases:  []string{"d"},
-						Usage:    "anki deck name",
-						Required: true,
-						Action: func(ctx context.Context, c *cli.Command, deck string) error {
-							if strings.TrimSpace(deck) == "" {
-								return errors.New("--deck must not be blank")
-							}
-							return nil
-						},
+						Name:    "deck",
+						Aliases: []string{"d"},
+						Value:   "laverna-deck",
+						Usage:   "anki deck name",
 					},
 					&cli.StringFlag{
 						Name:    "endpoint",
