@@ -2,11 +2,13 @@ package anki
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -51,6 +53,7 @@ type SaveFn func(filename string, audio []byte) error
 type Runner struct {
 	client     *http.Client
 	maxWorkers int
+	profile    string
 	save       SaveFn
 }
 
@@ -64,6 +67,7 @@ func NewRunner(profile string, opts ...RunnerOption) (*Runner, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ankiMediaPath(%q, %q): %w", profile, runtime.GOOS, err)
 	}
+	r.profile = profile
 
 	info, err := os.Stat(path)
 	if err != nil {
@@ -164,6 +168,8 @@ type RunConfig struct {
 	Voice          string
 	HelperLanguage string
 	OutFilename    string
+	Deck           string
+	Endpoint       string
 	Shuffle        bool
 	StripCSVHeader bool
 }
@@ -240,10 +246,63 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 	if err != nil {
 		return fmt.Errorf("os.Create(%q): %w", c.OutFilename, err)
 	}
-	defer func() { _ = outFile.Close() }()
+	defer func() {
+		closeErr := outFile.Close()
+		if err == nil && closeErr != nil {
+			err = fmt.Errorf("%T.Close(): %v", outFile, closeErr)
+		}
+	}()
 
 	if err := WriteCSVRecords(outFile, records, c.StripCSVHeader, c.Shuffle); err != nil {
 		return fmt.Errorf("WriteCSVRecords(%q): %w", outFile.Name(), err)
+	}
+
+	if strings.TrimSpace(c.Endpoint) != "" {
+		if err := r.postCSVRequest(ctx, c.Endpoint, c.Deck, outFile); err != nil {
+			return fmt.Errorf("%T.postCSVRequest(%v, %v): %v", r, c.Endpoint, c.Deck, err)
+		}
+	}
+
+	return nil
+}
+
+func (r *Runner) postCSVRequest(ctx context.Context, endpoint, deck string, f *os.File) error {
+	URL, err := url.Parse(endpoint)
+	if err != nil {
+		return fmt.Errorf("url.Parse(%q): %v", endpoint, err)
+	}
+	q := URL.Query()
+	q.Set("profile", r.profile)
+	q.Set("deck", deck)
+	URL.RawQuery = q.Encode()
+
+	if _, err := f.Seek(0, io.SeekStart); err != nil {
+		return fmt.Errorf("%T.Seek(0, io.SeekStart): %v", f, err)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, URL.String(), f)
+	if err != nil {
+		return fmt.Errorf("http.NewRequestWithContext(%v, %v): %v", http.MethodPost, URL.String(), err)
+	}
+	req.Header.Set("content-type", "text/csv")
+
+	resp, err := r.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("%T.Do(): %w", r.client, err)
+	}
+	defer func() {
+		closeErr := resp.Body.Close()
+		if err == nil && closeErr != nil {
+			err = fmt.Errorf("resp.Body.Close(): %v", closeErr)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		var em struct {
+			Message string `json:"message"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&em); err == nil {
+			return fmt.Errorf("anki addon server returned message: %q", em.Message)
+		}
 	}
 	return nil
 }
