@@ -262,7 +262,6 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 			return fmt.Errorf("%T.postCSVRequest(%v, %v): %v", r, c.Endpoint, c.Deck, err)
 		}
 	}
-
 	return nil
 }
 
