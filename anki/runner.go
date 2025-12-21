@@ -257,7 +257,7 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 		return fmt.Errorf("WriteCSVRecords(%q): %w", outFile.Name(), err)
 	}
 
-	if strings.TrimSpace(c.Endpoint) != "" {
+	if strings.TrimSpace(c.Endpoint) != "" && strings.TrimSpace(c.Deck) != "" {
 		if err := r.postCSVRequest(ctx, c.Endpoint, c.Deck, outFile); err != nil {
 			return fmt.Errorf("%T.postCSVRequest(%v, %v): %v", r, c.Endpoint, c.Deck, err)
 		}
