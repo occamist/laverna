@@ -68,9 +68,22 @@ func main() {
 						},
 					},
 					&cli.StringFlag{
-						Name:  "speed",
-						Value: "normal",
-						Usage: "specify the speed of audios, must be one of these values: `normal`, `slow`, `slowest`",
+						Name:    "deck",
+						Aliases: []string{"d"},
+						Value:   "laverna-deck",
+						Usage:   "anki deck name",
+					},
+					&cli.StringFlag{
+						Name:    "endpoint",
+						Aliases: []string{"e"},
+						Value:   "http://localhost:5555/v1/import-csv",
+						Usage:   "anki addon endpoint",
+					},
+					&cli.StringFlag{
+						Name:    "speed",
+						Aliases: []string{"s"},
+						Value:   "normal",
+						Usage:   "specify the speed of audios, must be one of these values: `normal`, `slow`, `slowest`",
 						Action: func(ctx context.Context, c *cli.Command, speed string) error {
 							if !synthesize.IsSpeed(speed) {
 								return errors.New("--speed must be one of these values: normal, slow, slowest")
@@ -80,20 +93,19 @@ func main() {
 					},
 					&cli.StringFlag{
 						Name:     "voice",
+						Aliases:  []string{"v"},
 						Usage:    "specify the voice of audios",
 						Required: true,
 					},
 					&cli.BoolFlag{
-						Name:    "shuffle",
-						Aliases: []string{"s"},
-						Value:   true,
-						Usage:   "shuffles A,B,C,D choices per row",
+						Name:  "shuffle",
+						Value: true,
+						Usage: "shuffles A,B,C,D choices per row",
 					},
 					&cli.BoolFlag{
-						Name:    "strip-csv-header",
-						Aliases: []string{"strip"},
-						Value:   true,
-						Usage:   "strips csv header from the generated anki CSV file",
+						Name:  "strip-csv-header",
+						Value: true,
+						Usage: "strips csv header from the generated anki CSV file",
 					},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
@@ -108,6 +120,8 @@ func main() {
 							Speed:          cmd.String("speed"),
 							Voice:          cmd.String("voice"),
 							OutFilename:    outFilename,
+							Deck:           cmd.String("deck"),
+							Endpoint:       cmd.String("endpoint"),
 							Shuffle:        cmd.Bool("shuffle"),
 							StripCSVHeader: cmd.Bool("strip-csv-header"),
 						},
