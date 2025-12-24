@@ -22,8 +22,6 @@ from aqt import mw, gui_hooks, appVersion
 from flask import Flask, jsonify, request, Response, Blueprint
 from waitress.server import create_server
 
-
-LEGACY_MODEL_NAME = "Cloze Multi Choice Audio"
 MODEL_NAME = "Laverna Cloze"
 
 DEFAULT_ADDRESS = "127.0.0.1"
@@ -179,12 +177,9 @@ if __name__ != "addon":
             if col is None:
                 return future.set_result((None, "Failed to load collection"))
 
-            model: NotetypeDict | None = col.models.by_name(LEGACY_MODEL_NAME)
+            model: NotetypeDict | None = col.models.by_name(MODEL_NAME)
             if model is None:
-                if MODEL_NAME in col.models.all_names():
-                    model = col.models.by_name(MODEL_NAME)
-                else:
-                    model = save_model(col)
+                model = save_model(col)
 
             deck_id = col.decks.id(deck_name, create=True)
 

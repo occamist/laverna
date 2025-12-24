@@ -53,33 +53,31 @@ or you could do YAML
 Running below command will generate audios in the same directory.
 
 ```shell
-  laverna run -file example.csv
+  laverna run --file example.csv
 ```
 
 or
 
 ```shell
-  laverna run -file example.yaml 
+  laverna run --file example.yaml 
 ```
 
 ### Anki
 
-Make sure you have note type installed for Anki. Here is the [note type](./note-type.apkg), when you imported it, you will see "Cloze Multi Choice Audio" note type in your `Anki > Tools > Manage Note Types`. Then you can proceed with the below Anki CSV format.
+Make sure you have [Laverna Anki Addon](https://github.com/mrwormhole/laverna/tree/main/addon) installed first. Then you can proceed with the below CSV format.
 
 ```csv
 Text,HelperText,TextA,TextB,TextC,TextD
 ฉันชอบ{{c1::ฟัง}}เพลง,I like to listen to music,ฟัง,เล่น,ดู,อ่าน
+เขา{{c1::เล่น}}ฟุตบอลทุกวัน,He plays football every day,เล่น,ฟัง,ดู,อ่าน
+คุณ{{c1::อ่าน}}หนังสือนี้ไหม,Do you read this book,อ่าน,ฟัง,เล่น,ดู
 ```
 
 ```shell
-  laverna anki --profile Talha --voice th --file ./testdata/anki-th-example.csv
+  laverna anki --profile Talha --deck my-thai-deck --voice th --file ./testdata/anki-th-example.csv
 ```
 
-Now you will see a new result as below CSV file, all of your media is generated and inserted into Anki, however in order to create a deck in Anki, you need to import CSV below. And carefully choose comma delimiter with note type "Cloze Multi Choice Audio"
-
-```csv
-ฉันชอบ{{c1::ฟัง}}เพลง,I like to listen to music,ฟัง,เล่น,ดู,อ่าน,[sound:a.mp3],[sound:b.mp3],[sound:c.mp3],[sound:d.mp3],[sound:e.mp3]
-```
+Now your new deck is created in Anki with the audio.
 
 ![anki-front-card](https://github.com/user-attachments/assets/fbc19bd1-0d74-4659-b9a0-2e40e9e8d4cf)
 
