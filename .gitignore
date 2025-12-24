@@ -4,3 +4,4 @@
 main
 __pycache__
 addon.log
+*.ankiaddon
