@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -68,10 +67,17 @@ func main() {
 						},
 					},
 					&cli.StringFlag{
-						Name:    "deck",
-						Aliases: []string{"d"},
-						Value:   "laverna-deck",
-						Usage:   "anki deck name",
+						Name:     "deck",
+						Aliases:  []string{"d"},
+						Value:    "laverna-deck",
+						Usage:    "anki deck name",
+						Required: true,
+						Action: func(ctx context.Context, c *cli.Command, deck string) error {
+							if strings.TrimSpace(deck) == "" {
+								return errors.New("--deck must not be blank")
+							}
+							return nil
+						},
 					},
 					&cli.StringFlag{
 						Name:    "endpoint",
@@ -107,11 +113,13 @@ func main() {
 						Value: true,
 						Usage: "strips csv header from the generated anki CSV file",
 					},
+					&cli.BoolFlag{
+						Name:  "stdout",
+						Value: false,
+						Usage: "prints the generated anki CSV file to stdout",
+					},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
-					dir, filename := filepath.Dir(cmd.String("file")), "A"+filepath.Base(cmd.String("file"))
-					outFilename := filepath.Join(dir, filename)
-
 					return ankiCmd(ctx, ankiCmdFlags{
 						Filename:   cmd.String("file"),
 						MaxWorkers: cmd.Int("workers"),
@@ -119,11 +127,11 @@ func main() {
 						Config: anki.RunConfig{
 							Speed:          cmd.String("speed"),
 							Voice:          cmd.String("voice"),
-							OutFilename:    outFilename,
 							Deck:           cmd.String("deck"),
 							Endpoint:       cmd.String("endpoint"),
 							Shuffle:        cmd.Bool("shuffle"),
 							StripCSVHeader: cmd.Bool("strip-csv-header"),
+							PrintOut:       cmd.Bool("stdout"),
 						},
 					})
 				},

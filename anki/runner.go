@@ -1,6 +1,7 @@
 package anki
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -167,11 +168,11 @@ type RunConfig struct {
 	Speed          string
 	Voice          string
 	HelperLanguage string
-	OutFilename    string
 	Deck           string
 	Endpoint       string
 	Shuffle        bool
 	StripCSVHeader bool
+	PrintOut       bool
 }
 
 // Run runs given opts concurrently and stops if encounters an error
@@ -242,30 +243,25 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 		records[i].AudioD = "[sound:" + uuids["AudioD"] + ".mp3]"
 	}
 
-	outFile, err := os.Create(c.OutFilename)
-	if err != nil {
-		return fmt.Errorf("os.Create(%q): %w", c.OutFilename, err)
+	var writers []io.Writer
+	var buf bytes.Buffer
+	writers = append(writers, &buf)
+	if c.PrintOut {
+		writers = append(writers, os.Stdout)
 	}
-	defer func() {
-		closeErr := outFile.Close()
-		if err == nil && closeErr != nil {
-			err = fmt.Errorf("%T.Close(): %v", outFile, closeErr)
-		}
-	}()
+	multiWriter := io.MultiWriter(writers...)
 
-	if err := WriteCSVRecords(outFile, records, c.StripCSVHeader, c.Shuffle); err != nil {
-		return fmt.Errorf("WriteCSVRecords(%q): %w", outFile.Name(), err)
+	if err := WriteCSVRecords(multiWriter, records, c.StripCSVHeader, c.Shuffle); err != nil {
+		return fmt.Errorf("WriteCSVRecords(): %w", err)
 	}
 
-	if strings.TrimSpace(c.Endpoint) != "" && strings.TrimSpace(c.Deck) != "" {
-		if err := r.postCSVRequest(ctx, c.Endpoint, c.Deck, outFile); err != nil {
-			return fmt.Errorf("%T.postCSVRequest(%v, %v): %v", r, c.Endpoint, c.Deck, err)
-		}
+	if err := r.postCSVRequest(ctx, c.Endpoint, c.Deck, bytes.NewReader(buf.Bytes())); err != nil {
+		return fmt.Errorf("%T.postCSVRequest(%v, %v): %v", r, c.Endpoint, c.Deck, err)
 	}
 	return nil
 }
 
-func (r *Runner) postCSVRequest(ctx context.Context, endpoint, deck string, f *os.File) error {
+func (r *Runner) postCSVRequest(ctx context.Context, endpoint, deck string, body io.Reader) error {
 	URL, err := url.Parse(endpoint)
 	if err != nil {
 		return fmt.Errorf("url.Parse(%q): %v", endpoint, err)
@@ -275,10 +271,7 @@ func (r *Runner) postCSVRequest(ctx context.Context, endpoint, deck string, f *o
 	q.Set("deck", deck)
 	URL.RawQuery = q.Encode()
 
-	if _, err := f.Seek(0, io.SeekStart); err != nil {
-		return fmt.Errorf("%T.Seek(0, io.SeekStart): %v", f, err)
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, URL.String(), f)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, URL.String(), body)
 	if err != nil {
 		return fmt.Errorf("http.NewRequestWithContext(%v, %v): %v", http.MethodPost, URL.String(), err)
 	}

@@ -9,18 +9,20 @@ from threading import Thread
 from typing import Iterator
 
 from anki.collection import (
+    Collection,
     NotetypeDict,
     ImportCsvRequest,
     Delimiter,
     ImportLogWithChanges,
     CsvMetadata,
 )
+from anki.consts import MODEL_CLOZE
+from anki.stdmodels import StockNotetypeKind
 from aqt import mw, gui_hooks, appVersion
 from flask import Flask, jsonify, request, Response, Blueprint
 from waitress.server import create_server
 
-
-MODEL_NAME = "Cloze Multi Choice Audio"
+MODEL_NAME = "Laverna Cloze"
 
 DEFAULT_ADDRESS = "127.0.0.1"
 DEFAULT_PORT = 5555
@@ -35,6 +37,70 @@ def temp_csv_file(csv_data: str) -> Iterator[str]:
         yield tmp.name
     finally:
         os.remove(tmp.name)
+
+
+def save_model(col: Collection) -> NotetypeDict:
+    model = col.models.new(MODEL_NAME)
+    model["type"] = MODEL_CLOZE
+    model["originalStockKind"] = StockNotetypeKind.KIND_CLOZE
+
+    col.models.add_field(model, col.models.new_field("Text"))
+    col.models.add_field(model, col.models.new_field("HelperText"))
+    col.models.add_field(model, col.models.new_field("TextA"))
+    col.models.add_field(model, col.models.new_field("TextB"))
+    col.models.add_field(model, col.models.new_field("TextC"))
+    col.models.add_field(model, col.models.new_field("TextD"))
+    col.models.add_field(model, col.models.new_field("AudioA"))
+    col.models.add_field(model, col.models.new_field("AudioB"))
+    col.models.add_field(model, col.models.new_field("AudioC"))
+    col.models.add_field(model, col.models.new_field("AudioD"))
+    col.models.add_field(model, col.models.new_field("AudioAnswer"))
+
+    templ = col.models.new_template("Cloze")
+    templ["qfmt"] = """{{cloze:Text}}<br>
+{{HelperText}} <br><br>
+
+{{AudioA}} {{TextA}}
+<br>
+{{AudioB}} {{TextB}}
+<br>
+{{AudioC}} {{TextC}}
+<br>
+{{AudioD}} {{TextD}}
+"""
+    templ["afmt"] = """{{cloze:Text}}<br>
+{{HelperText}}
+
+<hr id=answer>
+
+{{AudioAnswer}}"""
+    templ["bqfmt"] = "{{cloze:Text}}"
+    templ["bafmt"] = "{{cloze:Text}}"
+    col.models.add_template(model, templ)
+
+    model["css"] = """.card {
+    font-family: 'Sarabun', Arial, sans-serif;
+    font-size: 32px;
+    text-align: center;
+    min-height: 400px;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.cloze {
+    font-weight: bold;
+    color: #ffd700;
+    font-size: 32px;
+}
+
+hr#answer {
+    height: 8px;
+    background: #00add8;
+}"""
+
+    col.models.add(model)
+    return col.models.by_name(MODEL_NAME)
 
 
 # when run inside Anki, __name__ variable would be numeric value (addon ID)
@@ -95,8 +161,7 @@ if __name__ != "addon":
 
         def execute() -> None:
             if profile not in mw.pm.profiles():
-                future.set_result((None, f"Profile '{profile}' does not exist"))
-                return
+                return future.set_result((None, f"Profile '{profile}' does not exist"))
 
             current_profile = mw.pm.name
             if current_profile != profile:
@@ -110,19 +175,11 @@ if __name__ != "addon":
 
             col = mw.col
             if col is None:
-                future.set_result((None, "Failed to load collection"))
-                return
+                return future.set_result((None, "Failed to load collection"))
 
             model: NotetypeDict | None = col.models.by_name(MODEL_NAME)
             if model is None:
-                # TODO: we should create the model for Lamia as a fallback and not fail here
-                future.set_result(
-                    (
-                        None,
-                        f"Model '{MODEL_NAME}' does not exist, please download and create the notetype first (https://github.com/mrwormhole/laverna/blob/main/note-type.apkg)",
-                    )
-                )
-                return
+                model = save_model(col)
 
             deck_id = col.decks.id(deck_name, create=True)
 
@@ -148,7 +205,6 @@ if __name__ != "addon":
                     "updated_notes": len(list(resp.log.updated)),
                     "new_notes": len(list(resp.log.new)),
                 }
-
             future.set_result((res, None))
 
         # run on main thread of Anki to avoid SQLite threading issues
