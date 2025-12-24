@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -38,9 +40,14 @@ func makeAnkiMediaPath(t *testing.T, profile string) {
 
 func TestAnkiCmd(t *testing.T) {
 	t.Parallel()
-	const (
-		maxWorkers = 20
-	)
+	const maxWorkers = 20
+
+	mockAnkiServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	t.Cleanup(func() {
+		mockAnkiServer.Close()
+	})
 
 	tests := []struct {
 		name     string
@@ -65,7 +72,8 @@ func TestAnkiCmd(t *testing.T) {
 			cfg: anki.RunConfig{
 				Speed:          "normal",
 				Voice:          "th",
-				OutFilename:    filepath.Join(t.TempDir(), "Athai.csv"),
+				Deck:           "test-deck",
+				Endpoint:       mockAnkiServer.URL,
 				Shuffle:        true,
 				StripCSVHeader: true,
 			},
@@ -85,7 +93,6 @@ func TestAnkiCmd(t *testing.T) {
 			cfg: anki.RunConfig{
 				Speed:          "normal",
 				Voice:          "XYZTESTXYZ",
-				OutFilename:    filepath.Join(t.TempDir(), "unknown.csv"),
 				Shuffle:        true,
 				StripCSVHeader: true,
 			},
@@ -105,7 +112,6 @@ func TestAnkiCmd(t *testing.T) {
 			cfg: anki.RunConfig{
 				Speed:          "normal",
 				Voice:          "th",
-				OutFilename:    filepath.Join(t.TempDir(), "Athai.csv"),
 				Shuffle:        true,
 				StripCSVHeader: true,
 			},
@@ -213,9 +219,7 @@ func TestAnkiCmd_FileNotFound(t *testing.T) {
 
 func TestRunCmd(t *testing.T) {
 	t.Parallel()
-	const (
-		maxWorkers = 20
-	)
+	const maxWorkers = 20
 
 	tests := []struct {
 		name     string

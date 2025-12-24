@@ -168,7 +168,6 @@ type RunConfig struct {
 	Speed          string
 	Voice          string
 	HelperLanguage string
-	OutFilename    string
 	Deck           string
 	Endpoint       string
 	Shuffle        bool
@@ -245,7 +244,6 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 	}
 
 	var writers []io.Writer
-
 	var buf bytes.Buffer
 	writers = append(writers, &buf)
 	if c.PrintOut {
@@ -257,10 +255,8 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 		return fmt.Errorf("WriteCSVRecords(): %w", err)
 	}
 
-	if strings.TrimSpace(c.Endpoint) != "" {
-		if err := r.postCSVRequest(ctx, c.Endpoint, c.Deck, bytes.NewReader(buf.Bytes())); err != nil {
-			return fmt.Errorf("%T.postCSVRequest(%v, %v): %v", r, c.Endpoint, c.Deck, err)
-		}
+	if err := r.postCSVRequest(ctx, c.Endpoint, c.Deck, bytes.NewReader(buf.Bytes())); err != nil {
+		return fmt.Errorf("%T.postCSVRequest(%v, %v): %v", r, c.Endpoint, c.Deck, err)
 	}
 	return nil
 }
