@@ -1,5 +1,7 @@
 package synthesize
 
+import "slices"
+
 // Voice represents ISO-639 language codes
 // Taken from https://cloud.google.com/translate/docs/languages
 // es-MX, es-ES or en-US, en-UK, en-AU voices are converted to regions and no longer available on web version, they are using different domains rather than language codes.
@@ -72,3 +74,77 @@ const (
 	VietnameseVoice          Voice = "vi"
 	WelshVoice               Voice = "cy"
 )
+
+// AllVoices returns a slice of all valid voice codes
+var AllVoices = []string{
+	string(AfrikaansVoice),
+	string(AlbanianVoice),
+	string(AmharicVoice),
+	string(ArabicVoice),
+	string(BengaliVoice),
+	string(BosnianVoice),
+	string(BulgarianVoice),
+	string(CantoneseVoice),
+	string(CatalanVoice),
+	string(ChineseSimplifiedVoice),
+	string(ChineseTraditionalVoice),
+	string(CroatianVoice),
+	string(CzechVoice),
+	string(DanishVoice),
+	string(DutchVoice),
+	string(EnglishVoice),
+	string(EstonianVoice),
+	string(FilipinoVoice),
+	string(FinnishVoice),
+	string(FrenchVoice),
+	string(FrenchCanadianVoice),
+	string(GalicianVoice),
+	string(GermanVoice),
+	string(GreekVoice),
+	string(GujaratiVoice),
+	string(HausaVoice),
+	string(HebrewVoice),
+	string(HindiVoice),
+	string(HungarianVoice),
+	string(IcelandicVoice),
+	string(IndonesianVoice),
+	string(ItalianVoice),
+	string(JapaneseVoice),
+	string(JavaneseVoice),
+	string(KhmerVoice),
+	string(KoreanVoice),
+	string(LatinVoice),
+	string(LatvianVoice),
+	string(LithuanianVoice),
+	string(MalayVoice),
+	string(MalayalamVoice),
+	string(MarathiVoice),
+	string(MyanmarVoice),
+	string(NepaliVoice),
+	string(NorwegianVoice),
+	string(PolishVoice),
+	string(PortugueseBrazilianVoice),
+	string(PortugueseVoice),
+	string(PunjabiVoice),
+	string(RomanianVoice),
+	string(RussianVoice),
+	string(SerbianVoice),
+	string(SinhalaVoice),
+	string(SlovakVoice),
+	string(SpanishVoice),
+	string(SundaneseVoice),
+	string(SwahiliVoice),
+	string(SwedishVoice),
+	string(TamilVoice),
+	string(TeluguVoice),
+	string(ThaiVoice),
+	string(UkrainianVoice),
+	string(UrduVoice),
+	string(VietnameseVoice),
+	string(WelshVoice),
+}
+
+// IsVoice validates if given string is a valid voice
+func IsVoice(v string) bool {
+	return slices.Contains(AllVoices, v)
+}

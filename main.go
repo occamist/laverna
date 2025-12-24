@@ -83,13 +83,13 @@ func main() {
 						Name:    "endpoint",
 						Aliases: []string{"e"},
 						Value:   "http://localhost:5555/v1/import-csv",
-						Usage:   "anki addon endpoint",
+						Usage:   "anki addon endpoint `URL`",
 					},
 					&cli.StringFlag{
 						Name:    "speed",
 						Aliases: []string{"s"},
 						Value:   "normal",
-						Usage:   "specify the speed of audios, must be one of these values: `normal`, `slow`, `slowest`",
+						Usage:   "specify the `SPEED` of audios",
 						Action: func(ctx context.Context, c *cli.Command, speed string) error {
 							if !synthesize.IsSpeed(speed) {
 								return errors.New("--speed must be one of these values: normal, slow, slowest")
@@ -100,18 +100,24 @@ func main() {
 					&cli.StringFlag{
 						Name:     "voice",
 						Aliases:  []string{"v"},
-						Usage:    "specify the voice of audios",
+						Usage:    "specify the `VOICE` of audios",
 						Required: true,
+						Action: func(ctx context.Context, c *cli.Command, voice string) error {
+							if !synthesize.IsVoice(voice) {
+								return errors.New("--voice must be one of these values: " + strings.Join(synthesize.AllVoices, ", "))
+							}
+							return nil
+						},
 					},
 					&cli.BoolFlag{
 						Name:  "shuffle",
 						Value: true,
-						Usage: "shuffles A,B,C,D choices per row",
+						Usage: "shuffles the text choices per row",
 					},
 					&cli.BoolFlag{
 						Name:  "strip-csv-header",
 						Value: true,
-						Usage: "strips csv header from the generated anki CSV file",
+						Usage: "strips the csv header from the generated anki CSV file",
 					},
 					&cli.BoolFlag{
 						Name:  "stdout",
