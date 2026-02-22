@@ -234,7 +234,7 @@ func Run(ctx context.Context, c *http.Client, opt Opt) (_ []byte, err error) {
 	req.Header.Set("Accept", "*/*")
 	req.Header.Set("Origin", hostname)
 	req.Header.Set("Referer", hostname)
-	resp, err := c.Do(req)
+	resp, err := c.Do(req) //nolint:gosec //endpoint is already a constant
 	if err != nil {
 		return nil, fmt.Errorf("%T.Do(): %w", c, err)
 	}

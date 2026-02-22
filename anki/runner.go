@@ -277,7 +277,7 @@ func (r *Runner) postCSVRequest(ctx context.Context, endpoint, deck string, body
 	}
 	req.Header.Set("content-type", "text/csv")
 
-	resp, err := r.client.Do(req)
+	resp, err := r.client.Do(req) //nolint:gosec //endpoint is not a constant because it is configured by CLI flag
 	if err != nil {
 		return fmt.Errorf("%T.Do(): %w", r.client, err)
 	}
