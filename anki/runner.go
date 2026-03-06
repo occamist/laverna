@@ -132,18 +132,6 @@ func WithSaveFunc(fn SaveFn) RunnerOption {
 	}
 }
 
-type job struct {
-	opt      synthesize.Opt
-	rowIndex int
-	textType string
-}
-
-type result struct {
-	rowIndex int
-	textType string
-	uuid     string
-}
-
 // RunConfig tells each run how to run
 type RunConfig struct {
 	Speed          string
@@ -156,11 +144,6 @@ type RunConfig struct {
 	PrintOut       bool
 }
 
-type pair struct {
-	text     string
-	textType string
-}
-
 // Run runs given opts concurrently and stops if encounters an error
 func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 	records, err := ReadCSVRecords(reader)
@@ -168,12 +151,22 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 		return fmt.Errorf("ReadCSVRecords(): %w", err)
 	}
 
+	type job struct {
+		opt      synthesize.Opt
+		rowIndex int
+		textType string
+	}
 	jobs := make(chan job, r.maxWorkers)
-	g, gctx := errgroup.WithContext(ctx)
 
+	g, gctx := errgroup.WithContext(ctx)
 	g.Go(func() error {
 		defer close(jobs)
 		for i, record := range records {
+
+			type pair struct {
+				text     string
+				textType string
+			}
 			pairs := []pair{
 				{record.CleanedText(), "AudioAnswer"},
 				{record.TextA, "AudioA"},
@@ -181,6 +174,7 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 				{record.TextC, "AudioC"},
 				{record.TextD, "AudioD"},
 			}
+
 			for _, p := range pairs {
 				opt := synthesize.Opt{
 					Speed: synthesize.NewSpeed(c.Speed),
@@ -198,6 +192,11 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 	})
 
 	const audioNum = 5 // There will be 5 audios per record
+	type result struct {
+		rowIndex int
+		textType string
+		uuid     string
+	}
 	results := make(chan result, len(records)*audioNum)
 
 	for range r.maxWorkers {
@@ -225,6 +224,7 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 
 	collectedResults := make(map[int]map[string]string, len(records)) // rowIndex -> textType -> uuid
 	done := make(chan struct{}, 1)
+
 	go func() {
 		defer close(done)
 		for r := range results {
