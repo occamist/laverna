@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"slices"
 	"strings"
@@ -248,6 +249,13 @@ func Run(ctx context.Context, c *http.Client, opt Opt) (_ []byte, err error) {
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("io.ReadAll(): %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		if dump, err := httputil.DumpResponse(resp, true); err != nil {
+			return nil, fmt.Errorf("%v returned: %v\n %v", URL, resp.Status, string(dump))
+		}
+		return nil, fmt.Errorf("%v returned: %v", URL, resp.Status)
 	}
 	return parseAudio(raw)
 }

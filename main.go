@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log"
 	"os"
-	"runtime"
 	"strings"
 
 	"github.com/urfave/cli/v3"
@@ -35,7 +34,7 @@ func main() {
 			&cli.IntFlag{
 				Name:    "workers",
 				Aliases: []string{"w"},
-				Value:   runtime.GOMAXPROCS(0),
+				Value:   synthesize.DefaultMaxWorkers,
 				Usage:   "maximum number of concurrent downloads",
 			},
 		},
