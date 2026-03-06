@@ -36,30 +36,10 @@ slower,en,Hello there
 slowest,ja,こんにちは~
 ```
 
-or you could do YAML
-
-```yaml
-- speed: normal
-  voice: th
-  text: "สวัสดีครับ"
-- speed: slower
-  voice: en
-  text: "Hello there"
-- speed: slowest
-  voice: ja
-  text: "こんにちは~"
-```
-
 Running below command will generate audios in the same directory.
 
 ```shell
   laverna run --file example.csv
-```
-
-or
-
-```shell
-  laverna run --file example.yaml 
 ```
 
 ### Anki
