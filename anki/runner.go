@@ -201,6 +201,10 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 	for range r.maxWorkers {
 		g.Go(func() error {
 			for j := range jobs {
+				if err := gctx.Err(); err != nil {
+					return fmt.Errorf("%T.Err(): %w", gctx, err)
+				}
+
 				if strings.TrimSpace(j.opt.Text) == "" {
 					return fmt.Errorf("text is empty on column(%q) and row(%d)", j.textType, j.rowIndex+1)
 				}
