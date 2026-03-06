@@ -236,7 +236,7 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 	}()
 
 	if err := g.Wait(); err != nil {
-		return fmt.Errorf("g.Wait(): %w", err)
+		return fmt.Errorf("%T.Wait(): %w", g, err)
 	}
 	close(results)
 	<-done

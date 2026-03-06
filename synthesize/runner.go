@@ -67,16 +67,17 @@ func (r *Runner) Run(ctx context.Context, opts []Opt) error {
 	jobs := make(chan Opt, r.maxWorkers)
 	g, ctx := errgroup.WithContext(ctx)
 
-	go func() {
+	g.Go(func() error {
 		defer close(jobs)
 		for _, opt := range opts {
 			select {
 			case jobs <- opt:
 			case <-ctx.Done():
-				return
+				return ctx.Err()
 			}
 		}
-	}()
+		return nil
+	})
 
 	for range r.maxWorkers {
 		g.Go(func() error {
