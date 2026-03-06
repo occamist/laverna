@@ -162,7 +162,6 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 	g.Go(func() error {
 		defer close(jobs)
 		for i, record := range records {
-
 			type pair struct {
 				text     string
 				textType string
