@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"io"
-	"os"
 	"strings"
 	"testing"
 
@@ -272,12 +271,6 @@ Question,Helper,A,B,C,D,Extra`,
 }
 
 func TestWriteCSVRecords(t *testing.T) {
-	const f = "../testdata/Aout.csv"
-	raw, err := os.ReadFile(f)
-	if err != nil {
-		t.Fatalf("os.ReadFile(%q): %v", f, err)
-	}
-
 	tests := []struct {
 		name           string
 		records        []Record
@@ -304,7 +297,7 @@ func TestWriteCSVRecords(t *testing.T) {
 				},
 			},
 			stripCSVHeader: true,
-			want:           string(raw),
+			want:           "ฉันชอบ{{c1::ฟัง}}เพลง,I like to listen to music,ฟัง,เล่น,ดู,อ่าน,[sound:a.mp3],[sound:b.mp3],[sound:c.mp3],[sound:d.mp3],[sound:e.mp3]\n",
 		},
 		{
 			name:           "write empty records without header",
