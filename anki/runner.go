@@ -16,7 +16,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/sourcegraph/conc/pool"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/mrwormhole/laverna/synthesize"
 )
@@ -62,7 +62,7 @@ type Runner struct {
 func NewRunner(profile string, opts ...RunnerOption) (*Runner, error) {
 	r := &Runner{
 		client:     http.DefaultClient,
-		maxWorkers: runtime.GOMAXPROCS(0),
+		maxWorkers: synthesize.DefaultMaxWorkers,
 	}
 	path, err := MediaPath(profile, runtime.GOOS)
 	if err != nil {
@@ -132,35 +132,16 @@ func WithSaveFunc(fn SaveFn) RunnerOption {
 	}
 }
 
+type job struct {
+	opt      synthesize.Opt
+	rowIndex int
+	textType string
+}
+
 type result struct {
 	rowIndex int
 	textType string
 	uuid     string
-}
-
-func runFunc(r *Runner, opt synthesize.Opt, rowIndex int, textType string, results chan<- result) func(ctx context.Context) error {
-	return func(ctx context.Context) error {
-		if strings.TrimSpace(opt.Text) == "" {
-			return fmt.Errorf("text is empty on column(%q) and row(%d)", textType, rowIndex+1)
-		}
-
-		audio, err := synthesize.Run(ctx, r.client, opt)
-		if err != nil {
-			return fmt.Errorf("Run(%v) with row index(%d): %w", opt, rowIndex, err)
-		}
-
-		uuid := uuid.NewString()
-		if err := r.save(uuid, audio); err != nil {
-			return fmt.Errorf("%T.save(%v) with row index(%d): %w", r, uuid, rowIndex, err)
-		}
-
-		results <- result{
-			rowIndex: rowIndex,
-			textType: textType,
-			uuid:     uuid,
-		}
-		return nil
-	}
 }
 
 // RunConfig tells each run how to run
@@ -175,60 +156,87 @@ type RunConfig struct {
 	PrintOut       bool
 }
 
+type pair struct {
+	text     string
+	textType string
+}
+
 // Run runs given opts concurrently and stops if encounters an error
 func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
-	p := pool.New().WithContext(ctx).WithMaxGoroutines(r.maxWorkers)
-
 	records, err := ReadCSVRecords(reader)
 	if err != nil {
 		return fmt.Errorf("ReadCSVRecords(): %w", err)
 	}
 
+	jobs := make(chan job, r.maxWorkers)
+	g, ctx := errgroup.WithContext(ctx)
+
+	g.Go(func() error {
+		defer close(jobs)
+		for i, record := range records {
+			pairs := []pair{
+				{record.CleanedText(), "AudioAnswer"},
+				{record.TextA, "AudioA"},
+				{record.TextB, "AudioB"},
+				{record.TextC, "AudioC"},
+				{record.TextD, "AudioD"},
+			}
+			for _, p := range pairs {
+				opt := synthesize.Opt{
+					Speed: synthesize.NewSpeed(c.Speed),
+					Voice: synthesize.Voice(c.Voice),
+					Text:  p.text,
+				}
+				select {
+				case jobs <- job{opt: opt, rowIndex: i, textType: p.textType}:
+				case <-ctx.Done():
+					return ctx.Err()
+				}
+			}
+		}
+		return nil
+	})
+
 	const audioNum = 5 // There will be 5 audios per record
 	results := make(chan result, len(records)*audioNum)
-	baseOpt := synthesize.Opt{
-		Speed: synthesize.NewSpeed(c.Speed),
-		Voice: synthesize.Voice(c.Voice),
-	}
 
-	type pair struct {
-		text     string
-		textType string
-	}
+	for range r.maxWorkers {
+		g.Go(func() error {
+			for j := range jobs {
+				if strings.TrimSpace(j.opt.Text) == "" {
+					return fmt.Errorf("text is empty on column(%q) and row(%d)", j.textType, j.rowIndex+1)
+				}
 
-	for i, record := range records {
-		pairs := []pair{
-			{record.CleanedText(), "AudioAnswer"},
-			{record.TextA, "AudioA"},
-			{record.TextB, "AudioB"},
-			{record.TextC, "AudioC"},
-			{record.TextD, "AudioD"},
-		}
+				audio, err := synthesize.Run(ctx, r.client, j.opt)
+				if err != nil {
+					return fmt.Errorf("Run(%v) with row index(%d): %w", j.opt, j.rowIndex, err)
+				}
 
-		for _, pair := range pairs {
-			opt := baseOpt // copy the struct
-			opt.Text = pair.text
-			p.Go(runFunc(r, opt, i, pair.textType, results))
-		}
+				uuid := uuid.NewString()
+				if err := r.save(uuid, audio); err != nil {
+					return fmt.Errorf("%T.save(%v) with row index(%d): %w", r, uuid, j.rowIndex, err)
+				}
+
+				results <- result{rowIndex: j.rowIndex, textType: j.textType, uuid: uuid}
+			}
+			return nil
+		})
 	}
 
 	collectedResults := make(map[int]map[string]string, len(records)) // rowIndex -> textType -> uuid
 	done := make(chan struct{}, 1)
 	go func() {
 		defer close(done)
-		for result := range results {
-			_, ok := collectedResults[result.rowIndex]
-			if !ok {
-				collectedResults[result.rowIndex] = make(map[string]string, audioNum)
-				collectedResults[result.rowIndex][result.textType] = result.uuid
-				continue
+		for r := range results {
+			if _, ok := collectedResults[r.rowIndex]; !ok {
+				collectedResults[r.rowIndex] = make(map[string]string, audioNum)
 			}
-			collectedResults[result.rowIndex][result.textType] = result.uuid
+			collectedResults[r.rowIndex][r.textType] = r.uuid
 		}
 	}()
 
-	if err := p.Wait(); err != nil {
-		return fmt.Errorf("%T.Wait(): %w", p, err)
+	if err := g.Wait(); err != nil {
+		return fmt.Errorf("g.Wait(): %w", err)
 	}
 	close(results)
 	<-done
