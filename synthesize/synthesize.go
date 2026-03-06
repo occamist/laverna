@@ -15,8 +15,6 @@ import (
 	"net/url"
 	"slices"
 	"strings"
-
-	"github.com/goccy/go-yaml"
 )
 
 // Opt consists of parameters for generating audio
@@ -24,34 +22,6 @@ type Opt struct {
 	Speed Speed
 	Voice Voice
 	Text  string
-}
-
-// ErrEmptyYAML occurs when empty yaml is given
-var ErrEmptyYAML = errors.New("empty yaml")
-
-// UnmarshalYAML reads raw bytes from YAML and turns into Opts
-func UnmarshalYAML(raw []byte) ([]Opt, error) {
-	if len(raw) == 0 {
-		return nil, ErrEmptyYAML
-	}
-
-	type YAML struct {
-		Speed string `yaml:"speed"`
-		Voice string `yaml:"voice"`
-		Text  string `yaml:"text"`
-	}
-	var in []YAML
-	if err := yaml.Unmarshal(raw, &in); err != nil {
-		return nil, fmt.Errorf("yaml.Unmarshal(): %w", err)
-	}
-
-	opts := make([]Opt, len(in))
-	for i, v := range in {
-		opts[i].Speed = NewSpeed(strings.ToLower(v.Speed))
-		opts[i].Voice = Voice(strings.ToLower(v.Voice))
-		opts[i].Text = v.Text
-	}
-	return opts, nil
 }
 
 // ErrEmptyCSV occurs when empty csv is given

@@ -17,10 +17,8 @@ type runCmdFlags struct {
 }
 
 func runCmd(ctx context.Context, f runCmdFlags) error {
-	isYAML := strings.HasSuffix(f.Filename, ".yaml") || strings.HasSuffix(f.Filename, ".yml")
-	isCSV := strings.HasSuffix(f.Filename, ".csv")
-	if !isYAML && !isCSV {
-		return errors.New("file format must be yaml/yml or csv")
+	if !strings.HasSuffix(f.Filename, ".csv") {
+		return errors.New("file format must be csv")
 	}
 
 	raw, err := os.ReadFile(f.Filename)
@@ -28,18 +26,9 @@ func runCmd(ctx context.Context, f runCmdFlags) error {
 		return fmt.Errorf("failed to read file(%q): %v", f.Filename, err)
 	}
 
-	var opts []synthesize.Opt
-	if isYAML {
-		opts, err = synthesize.UnmarshalYAML(raw)
-		if err != nil {
-			return fmt.Errorf("failed to unmarshal YAML: %v", err)
-		}
-	}
-	if isCSV {
-		opts, err = synthesize.UnmarshalCSV(raw)
-		if err != nil {
-			return fmt.Errorf("failed to unmarshal CSV: %v", err)
-		}
+	opts, err := synthesize.UnmarshalCSV(raw)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal CSV: %v", err)
 	}
 
 	runner := synthesize.NewRunner(synthesize.WithMaxWorkers(f.MaxWorkers))

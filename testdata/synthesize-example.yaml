@@ -1,9 +1,0 @@
-- speed: normal
-  voice: th
-  text: "สวัสดีครับ"
-- speed: slower
-  voice: en
-  text: "Hello there"
-- speed: slowest
-  voice: ja
-  text: "こんにちは~"
