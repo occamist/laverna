@@ -65,15 +65,15 @@ func WithSaveFunc(fn SaveFn) RunnerOption {
 // Run runs given opts concurrently and stops if encounters an error
 func (r *Runner) Run(ctx context.Context, opts []Opt) error {
 	jobs := make(chan Opt, r.maxWorkers)
-	g, ctx := errgroup.WithContext(ctx)
+	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
 		defer close(jobs)
 		for _, opt := range opts {
 			select {
 			case jobs <- opt:
-			case <-ctx.Done():
-				return ctx.Err()
+			case <-gctx.Done():
+				return gctx.Err()
 			}
 		}
 		return nil
@@ -82,7 +82,7 @@ func (r *Runner) Run(ctx context.Context, opts []Opt) error {
 	for range r.maxWorkers {
 		g.Go(func() error {
 			for j := range jobs {
-				audio, err := Run(ctx, r.client, j)
+				audio, err := Run(gctx, r.client, j)
 				if err != nil {
 					return fmt.Errorf("Run(%v): %w", j, err)
 				}

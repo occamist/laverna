@@ -169,7 +169,7 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 	}
 
 	jobs := make(chan job, r.maxWorkers)
-	g, ctx := errgroup.WithContext(ctx)
+	g, gctx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
 		defer close(jobs)
@@ -189,8 +189,8 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 				}
 				select {
 				case jobs <- job{opt: opt, rowIndex: i, textType: p.textType}:
-				case <-ctx.Done():
-					return ctx.Err()
+				case <-gctx.Done():
+					return gctx.Err()
 				}
 			}
 		}
@@ -207,7 +207,7 @@ func (r *Runner) Run(ctx context.Context, reader io.Reader, c RunConfig) error {
 					return fmt.Errorf("text is empty on column(%q) and row(%d)", j.textType, j.rowIndex+1)
 				}
 
-				audio, err := synthesize.Run(ctx, r.client, j.opt)
+				audio, err := synthesize.Run(gctx, r.client, j.opt)
 				if err != nil {
 					return fmt.Errorf("Run(%v) with row index(%d): %w", j.opt, j.rowIndex, err)
 				}
