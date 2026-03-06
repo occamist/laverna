@@ -239,17 +239,6 @@ func TestRunCmd(t *testing.T) {
 			},
 		},
 		{
-			name:     "successful run with YAML file",
-			filename: "synthesize-example.yaml",
-			setup: func(t *testing.T, filename string) string { //nolint:thelper // this is inline test helper
-				raw, err := os.ReadFile("testdata/synthesize-example.yaml")
-				if err != nil {
-					t.Fatalf("os.ReadFile(): %v", err)
-				}
-				return writeTempFile(t, string(raw), filename)
-			},
-		},
-		{
 			name:     "invalid voice",
 			filename: "synthesize-invalid-voice.csv",
 			setup: func(t *testing.T, filename string) string { //nolint:thelper // this is inline test helper
@@ -268,14 +257,6 @@ func TestRunCmd(t *testing.T) {
 				return writeTempFile(t, "", filename)
 			},
 			wantErr: errors.New("empty csv"),
-		},
-		{
-			name:     "empty YAML file",
-			filename: "empty-synthesize.yaml",
-			setup: func(t *testing.T, filename string) string { //nolint:thelper // this is inline test helper
-				return writeTempFile(t, "", filename)
-			},
-			wantErr: errors.New("empty yaml"),
 		},
 	}
 
@@ -309,17 +290,17 @@ func TestRunCmd_FileExtensions(t *testing.T) {
 		{
 			name:     "invalid extension yaml",
 			filename: "test.y4ml",
-			wantErr:  errors.New("file format must be yaml/yml or csv"),
+			wantErr:  errors.New("file format must be csv"),
 		},
 		{
 			name:     "no extension",
 			filename: "test",
-			wantErr:  errors.New("file format must be yaml/yml or csv"),
+			wantErr:  errors.New("file format must be csv"),
 		},
 		{
 			name:     "empty filename",
 			filename: "",
-			wantErr:  errors.New("file format must be yaml/yml or csv"),
+			wantErr:  errors.New("file format must be csv"),
 		},
 	}
 
