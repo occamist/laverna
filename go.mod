@@ -8,3 +8,5 @@ require (
 	github.com/urfave/cli/v3 v3.7.0
 	golang.org/x/sync v0.20.0
 )
+
+require golang.org/x/net v0.52.0

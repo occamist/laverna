@@ -123,12 +123,17 @@ func main() {
 						Value: false,
 						Usage: "prints the generated anki CSV file to stdout",
 					},
+					&cli.StringFlag{
+						Name:  "proxy",
+						Usage: "SOCKS5 proxy `ADDRESS` (e.g. localhost:1080)",
+					},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					return ankiCmd(ctx, ankiCmdFlags{
 						Filename:   cmd.String("file"),
 						MaxWorkers: cmd.Int("workers"),
 						Profile:    cmd.String("profile"),
+						Proxy:      cmd.String("proxy"),
 						Config: anki.RunConfig{
 							Speed:          cmd.String("speed"),
 							Voice:          cmd.String("voice"),

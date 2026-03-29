@@ -4,8 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net"
+	"net/http"
 	"os"
 	"strings"
+
+	"golang.org/x/net/proxy"
 
 	"github.com/mrwormhole/laverna/anki"
 	"github.com/mrwormhole/laverna/synthesize"
@@ -43,6 +47,7 @@ type ankiCmdFlags struct {
 	Filename   string
 	MaxWorkers int
 	Profile    string
+	Proxy      string
 	Config     anki.RunConfig
 }
 
@@ -58,7 +63,27 @@ func ankiCmd(ctx context.Context, f ankiCmdFlags) error {
 	}
 	defer func() { _ = file.Close() }()
 
-	runner, err := anki.NewRunner(f.Profile, anki.WithMaxWorkers(f.MaxWorkers))
+	opts := []anki.RunnerOption{anki.WithMaxWorkers(f.MaxWorkers)}
+	if f.Proxy != "" {
+		dialer, err := proxy.SOCKS5("tcp", f.Proxy, nil, nil)
+		if err != nil {
+			return fmt.Errorf("failed to create SOCKS5 dialer(%q): %v", f.Proxy, err)
+		}
+
+		transport := &http.Transport{
+			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+				host, _, _ := net.SplitHostPort(addr)
+				if host == "localhost" || host == "127.0.0.1" || host == "::1" {
+					var d net.Dialer
+					return d.DialContext(ctx, network, addr)
+				}
+				return dialer.Dial(network, addr)
+			},
+		}
+		opts = append(opts, anki.WithClient(&http.Client{Transport: transport}))
+	}
+
+	runner, err := anki.NewRunner(f.Profile, opts...)
 	if err != nil {
 		return fmt.Errorf("failed to make runner: %v", err)
 	}
