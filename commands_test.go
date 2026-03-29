@@ -21,7 +21,7 @@ func writeTempFile(t *testing.T, content string, filename string) string {
 	t.Helper()
 	tmp := t.TempDir()
 	fp := filepath.Join(tmp, filename)
-	if err := os.WriteFile(fp, []byte(content), 0o600); err != nil {
+	if err := os.WriteFile(fp, []byte(content), 0o600); err != nil { //nolint:gosec // always within t.TempDir() and OK for tests
 		t.Fatalf("os.WriteFile(%q): %v", fp, err)
 	}
 	return fp

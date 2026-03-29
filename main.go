@@ -48,6 +48,7 @@ func main() {
 						MaxWorkers: cmd.Int("workers"),
 					})
 				},
+				Description: "laverna run --file example.csv",
 			},
 			{
 				Name:  "anki",
@@ -123,12 +124,17 @@ func main() {
 						Value: false,
 						Usage: "prints the generated anki CSV file to stdout",
 					},
+					&cli.StringFlag{
+						Name:  "proxy",
+						Usage: "SOCKS5 proxy `ADDRESS` (e.g. localhost:1080)",
+					},
 				},
 				Action: func(ctx context.Context, cmd *cli.Command) error {
 					return ankiCmd(ctx, ankiCmdFlags{
 						Filename:   cmd.String("file"),
 						MaxWorkers: cmd.Int("workers"),
 						Profile:    cmd.String("profile"),
+						Proxy:      cmd.String("proxy"),
 						Config: anki.RunConfig{
 							Speed:          cmd.String("speed"),
 							Voice:          cmd.String("voice"),
@@ -140,6 +146,7 @@ func main() {
 						},
 					})
 				},
+				Description: "Anki app has to be launched locally with Laverna Anki plugin installed before running CLI commands.\n\nlaverna anki --profile my-profile --deck my-deck --voice en --file example.csv",
 			},
 		},
 	}
