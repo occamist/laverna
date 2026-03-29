@@ -65,7 +65,7 @@ func ankiCmd(ctx context.Context, f ankiCmdFlags) error {
 
 	opts := []anki.RunnerOption{anki.WithMaxWorkers(f.MaxWorkers)}
 	if f.Proxy != "" {
-		dialer, err := proxy.SOCKS5("tcp", f.Proxy, nil, nil)
+		proxyDialer, err := proxy.SOCKS5("tcp", f.Proxy, nil, nil)
 		if err != nil {
 			return fmt.Errorf("failed to create SOCKS5 dialer(%q): %v", f.Proxy, err)
 		}
@@ -73,11 +73,12 @@ func ankiCmd(ctx context.Context, f ankiCmdFlags) error {
 		transport := &http.Transport{
 			DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
 				host, _, _ := net.SplitHostPort(addr)
+				fmt.Printf("host: %v, network: %v\n", host, network)
 				if host == "localhost" || host == "127.0.0.1" || host == "::1" {
 					var d net.Dialer
 					return d.DialContext(ctx, network, addr)
 				}
-				return dialer.Dial(network, addr)
+				return proxyDialer.Dial(network, addr)
 			},
 		}
 		opts = append(opts, anki.WithClient(&http.Client{Transport: transport}))
