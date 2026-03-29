@@ -48,6 +48,7 @@ func main() {
 						MaxWorkers: cmd.Int("workers"),
 					})
 				},
+				Description: "laverna run --file example.csv",
 			},
 			{
 				Name:  "anki",
@@ -145,6 +146,7 @@ func main() {
 						},
 					})
 				},
+				Description: "Anki app has to be launched locally with Laverna Anki plugin installed before running CLI commands.\n\nlaverna anki --profile my-profile --deck my-deck --voice en --file example.csv",
 			},
 		},
 	}
