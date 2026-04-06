@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -290,6 +291,9 @@ func (r *Runner) postCSVRequest(ctx context.Context, endpoint, deck string, body
 
 	resp, err := r.client.Do(req)
 	if err != nil {
+		if err, ok := errors.AsType[*net.OpError](err); ok && err.Op == "dial" {
+			return fmt.Errorf("failed to connect to Anki. Are Anki and Laverna Anki Addon running?")
+		}
 		return fmt.Errorf("%T.Do(): %w", r.client, err)
 	}
 	defer func() {
