@@ -109,7 +109,7 @@ formatters:
       sections:
         - standard
         - default
-        - prefix(github.com/mrwormhole/laverna)
+        - prefix(github.com/occamist/laverna)
       custom-order: true
   exclusions:
     generated: lax

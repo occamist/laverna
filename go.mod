@@ -1,4 +1,4 @@
-module github.com/mrwormhole/laverna
+module github.com/occamist/laverna
 
 go 1.26
 

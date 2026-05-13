@@ -11,8 +11,8 @@ import (
 
 	"golang.org/x/net/proxy"
 
-	"github.com/mrwormhole/laverna/anki"
-	"github.com/mrwormhole/laverna/synthesize"
+	"github.com/occamist/laverna/anki"
+	"github.com/occamist/laverna/synthesize"
 )
 
 type runCmdFlags struct {

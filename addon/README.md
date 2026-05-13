@@ -9,7 +9,7 @@ This addon works with Laverna CLI to create custom decks for your needs with Goo
 - Download Laverna CLI
 - Install this addon
 - Start Anki (the addon runs HTTP server on localhost with port 5555)
-- Now you can use Laverna CLI to create your decks, for more info, see `laverna anki --help` or [the git repository](https://github.com/mrwormhole/laverna)
+- Now you can use Laverna CLI to create your decks, for more info, see `laverna anki --help` or [the git repository](https://github.com/occamist/laverna)
 
 Click [here](https://ankiweb.net/shared/info/1504755463) to download the addon.
 

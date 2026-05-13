@@ -14,7 +14,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"github.com/mrwormhole/laverna/anki"
+	"github.com/occamist/laverna/anki"
 )
 
 func writeTempFile(t *testing.T, content string, filename string) string {

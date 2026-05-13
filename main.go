@@ -9,8 +9,8 @@ import (
 
 	"github.com/urfave/cli/v3"
 
-	"github.com/mrwormhole/laverna/anki"
-	"github.com/mrwormhole/laverna/synthesize"
+	"github.com/occamist/laverna/anki"
+	"github.com/occamist/laverna/synthesize"
 )
 
 func main() {

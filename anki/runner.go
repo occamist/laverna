@@ -19,7 +19,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/mrwormhole/laverna/synthesize"
+	"github.com/occamist/laverna/synthesize"
 )
 
 // MediaPath returns the Anki media path based on the profile name and the OS(runtime.GOOS)

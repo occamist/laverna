@@ -1,11 +1,11 @@
 # Laverna
 
-[![Version](https://img.shields.io/github/tag/mrwormhole/laverna.svg)](https://github.com/mrwormhole/laverna/tags)
-[![CI](https://github.com/mrwormhole/laverna/actions/workflows/main.yaml/badge.svg)](https://github.com/mrwormhole/laverna/actions/workflows/main.yaml)
-[![Godoc](https://godoc.org/github.com/mrwormhole/laverna?status.svg)](https://godoc.org/github.com/mrwormhole/laverna)
-[![Report Card](https://goreportcard.com/badge/github.com/mrwormhole/laverna)](https://goreportcard.com/report/github.com/mrwormhole/laverna)
-[![License](https://img.shields.io/github/license/mrwormhole/laverna)](https://github.com/mrwormhole/laverna/blob/main/LICENSE)
-[![Codecov](https://codecov.io/github/mrwormhole/laverna/graph/badge.svg?token=HUR58C4DFN)](https://codecov.io/github/mrwormhole/laverna)
+[![Version](https://img.shields.io/github/tag/occamist/laverna.svg)](https://github.com/occamist/laverna/tags)
+[![CI](https://github.com/occamist/laverna/actions/workflows/main.yaml/badge.svg)](https://github.com/occamist/laverna/actions/workflows/main.yaml)
+[![Godoc](https://godoc.org/github.com/occamist/laverna?status.svg)](https://godoc.org/github.com/occamist/laverna)
+[![Report Card](https://goreportcard.com/badge/github.com/occamist/laverna)](https://goreportcard.com/report/github.com/occamist/laverna)
+[![License](https://img.shields.io/github/license/occamist/laverna)](https://github.com/occamist/laverna/blob/main/LICENSE)
+[![Codecov](https://codecov.io/github/occamist/laverna/graph/badge.svg?token=HUR58C4DFN)](https://codecov.io/github/occamist/laverna)
 
 the goddess of the thieves, helps you steal translation speeches from the G-daddy monopoly.
 
@@ -15,12 +15,12 @@ the goddess of the thieves, helps you steal translation speeches from the G-dadd
 
 ### Grab Binaries
 
-You can find the binaries through GitHub [releases](https://github.com/mrwormhole/laverna/releases/).
+You can find the binaries through GitHub [releases](https://github.com/occamist/laverna/releases/).
 
 ### Install Via Go
 
 ```shell
-  go install github.com/mrwormhole/laverna@latest
+  go install github.com/occamist/laverna@latest
 ```
 
 ## Sample Usage
@@ -44,7 +44,7 @@ Running below command will generate audios in the same directory.
 
 ### Anki
 
-Make sure you have [Laverna Anki Addon](https://github.com/mrwormhole/laverna/tree/main/addon) installed first. Then you can proceed with the below CSV format.
+Make sure you have [Laverna Anki Addon](https://github.com/occamist/laverna/tree/main/addon) installed first. Then you can proceed with the below CSV format.
 
 ```csv
 Text,HelperText,TextA,TextB,TextC,TextD
