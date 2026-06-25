@@ -42,6 +42,7 @@ linters:
     goconst:
       min-len: 3
       min-occurrences: 3
+      ignore-tests: true
     nolintlint:
       require-explanation: true
       require-specific: true
@@ -72,11 +73,6 @@ linters:
   exclusions:
     generated: lax
     rules:
-      - linters:
-          - containedctx
-          - goconst
-        path: (.+)_test\.go
-
       - linters:
           - revive
         path: synthesize/voice.go

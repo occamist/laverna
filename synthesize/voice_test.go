@@ -85,7 +85,7 @@ func TestRun_AllVoices(t *testing.T) {
 		opt     Opt
 		wantErr error
 	}
-	var tests []Test
+	tests := make([]Test, 0, len(testVoices))
 
 	for _, voice := range testVoices {
 		opt := Opt{
