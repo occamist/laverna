@@ -13,23 +13,22 @@ linters:
     - errname
     - fatcontext
     - forcetypeassert
-    - gochecknoinits
     - goconst
-    - godox
     - gosec
     - govet
     - ineffassign
-    - interfacebloat
-    - musttag
+    - makezero
+    - modernize
     - nilerr
     - nilnil
     - noctx
     - nolintlint
+    - prealloc
     - predeclared
     - recvcheck
     - revive
     - sloglint
-    - staticcheck # stylecheck, gosimple, and staticcheck has been merged inside the staticcheck
+    - staticcheck
     - thelper
     - tparallel
     - unconvert
@@ -43,19 +42,9 @@ linters:
     goconst:
       min-len: 3
       min-occurrences: 3
-    godox:
-      keywords:
-        - TODO
-        - BUG
-        - FIXME
-        - OPTIMIZE
-        - HACK
-    interfacebloat:
-      max: 5
     nolintlint:
-      require-explanation: false
+      require-explanation: true
       require-specific: true
-      allow-unused: false
     revive:
       max-open-files: 2048
       confidence: 0.8
@@ -78,10 +67,8 @@ linters:
           severity: warning
           disabled: false
     usetesting:
-      os-mkdir-temp: true
-      os-setenv: true
-      os-temp-dir: true
-      os-create-temp: true
+      context-background: true
+      context-todo: true
   exclusions:
     generated: lax
     rules:
@@ -94,10 +81,6 @@ linters:
           - revive
         path: synthesize/voice.go
         text: "exported const .* should have comment"
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
 formatters:
   enable:
     - gci
@@ -111,9 +94,3 @@ formatters:
         - default
         - prefix(github.com/occamist/laverna)
       custom-order: true
-  exclusions:
-    generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
