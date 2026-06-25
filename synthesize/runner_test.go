@@ -23,7 +23,7 @@ func TestBatchRunner(t *testing.T) {
 		saveFn     func(string, []byte) error
 		wantErr    error
 		wantAudios []string
-		ctx        context.Context
+		ctx        context.Context //nolint:containedctx // one test requires a cancelled context
 	}{
 		{
 			name: "successful batch run",
