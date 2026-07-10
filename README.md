@@ -63,6 +63,21 @@ Now your new deck is created in Anki with the audio.
 
 ![anki-back-card](https://github.com/user-attachments/assets/6cca4cfc-237a-493f-8306-0972278231fa)
 
+### Yomitan
+
+Run a local HTTP server that acts as a [custom audio source (JSON)](https://yomitan.wiki/advanced/#default-audio-sources) for [Yomitan](https://github.com/yomidevs/yomitan). In Yomitan, go to Settings → Audio → Configure Audio Playback Sources → Add, choose type `Custom URL (JSON)`, and set the URL to:
+
+```text
+http://localhost:8770?term={term}&reading={reading}&language={language}
+```
+
+Then open a terminal and run below to ensure the server is listening on your machine while you use Yomitan on the browser.
+
+```shell
+  laverna yomitan
+2026/08/08 00:00:00 listening on "localhost:8770"
+```
+
 ## Shell Completions
 
 Output shell completion script for bash, zsh, fish, or Powershell.

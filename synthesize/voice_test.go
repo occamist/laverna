@@ -76,6 +76,29 @@ var testVoices = []Voice{
 	WelshVoice,
 }
 
+func TestIsVoice(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		str  string
+		want bool
+	}{
+		{str: "en", want: true},
+		{str: "th", want: true},
+		{str: "zh-TW", want: true},
+		{str: "bogus", want: false},
+		{str: "", want: false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.str, func(t *testing.T) {
+			t.Parallel()
+			if got := IsVoice(tt.str); got != tt.want {
+				t.Errorf("IsVoice(%v): got = %v, want = %v", tt.str, got, tt.want)
+			}
+		})
+	}
+}
+
 func TestRun_AllVoices(t *testing.T) {
 	t.Parallel()
 
