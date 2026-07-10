@@ -1,0 +1,50 @@
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:v3.7
+    command:
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --providers.docker
+      - --providers.docker.exposedByDefault=false
+      - --global.sendAnonymousUsage=false
+      - --log.level=ERROR
+      - --certificatesresolvers.leresolver.acme.email=talhaaltinel@hotmail.com
+      - --certificatesresolvers.leresolver.acme.storage=./acme.json
+      - --certificatesresolvers.leresolver.acme.httpchallenge=true
+      - --certificatesresolvers.leresolver.acme.httpchallenge.entrypoint=web
+      # - --certificatesresolvers.leresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./acme.json:/acme.json"
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.http-catchall.rule=HostRegexp(`^.+$`)"
+      - "traefik.http.routers.http-catchall.entrypoints=web"
+      - "traefik.http.routers.http-catchall.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+    restart: unless-stopped
+
+  laverna:
+    container_name: laverna
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - traefik-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.laverna.rule=Host(`yomitan.occamist.dev`)"
+      - "traefik.http.routers.laverna.entrypoints=websecure"
+      - "traefik.http.services.laverna.loadbalancer.server.port=8770"
+      - "traefik.http.routers.laverna.tls.certresolver=leresolver"
+    restart: unless-stopped
+
+networks:
+  traefik-network:
+    external: true

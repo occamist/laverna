@@ -1,0 +1,8 @@
+.git
+.github
+.claude
+addon
+testdata
+*.mp3
+main
+README.md
