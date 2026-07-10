@@ -64,7 +64,7 @@ Now your new deck is created in Anki with the audio.
 
 ### Yomitan
 
-Run a local HTTP server that acts as a [custom audio source (JSON)](https://yomitan.wiki/advanced/#default-audio-sources) for [Yomitan](https://github.com/yomidevs/yomitan). In Yomitan, go to Settings → Audio → Configure Audio Playback Sources → Add, choose type `Custom URL (JSON)`, and set the URL to:
+Run a local HTTP server that acts as a [custom audio source (JSON)](https://yomitan.wiki/advanced/#default-audio-sources) for [Yomitan](https://github.com/yomidevs/yomitan). In Yomitan, go to Settings → Audio → Configure Audio Playback Sources → Add, choose type `Custom URL (JSON)`, and set the URL to below if you intend to host locally:
 
 ```text
 http://localhost:8770?term={term}&reading={reading}&language={language}
@@ -75,6 +75,13 @@ Then open a terminal and run below to ensure the server is listening on your mac
 ```shell
   laverna yomitan
 2026/08/08 00:00:00 listening on "localhost:8770"
+```
+
+---
+
+If you wish to not host locally, you can use my own hosting server. This is the only option you have on your phone or on your tablet etc. :)
+```text
+https://yomitan.occamist.dev/?term={term}&reading={reading}&language={language}
 ```
 
 ## Shell Completions
