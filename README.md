@@ -3,7 +3,6 @@
 [![Version](https://img.shields.io/github/tag/occamist/laverna.svg)](https://github.com/occamist/laverna/tags)
 [![CI](https://github.com/occamist/laverna/actions/workflows/main.yaml/badge.svg)](https://github.com/occamist/laverna/actions/workflows/main.yaml)
 [![Godoc](https://godoc.org/github.com/occamist/laverna?status.svg)](https://godoc.org/github.com/occamist/laverna)
-[![Report Card](https://goreportcard.com/badge/github.com/occamist/laverna)](https://goreportcard.com/report/github.com/occamist/laverna)
 [![License](https://img.shields.io/github/license/occamist/laverna)](https://github.com/occamist/laverna/blob/main/LICENSE)
 [![Codecov](https://codecov.io/github/occamist/laverna/graph/badge.svg?token=HUR58C4DFN)](https://codecov.io/github/occamist/laverna)
 
