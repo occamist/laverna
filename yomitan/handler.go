@@ -42,13 +42,11 @@ func synthesizeParams(term, reading, language string) (synthesize.Opt, error) {
 	return synthesize.Opt{Text: text, Voice: synthesize.Voice(language), Speed: synthesize.NormalSpeed}, nil
 }
 
-// audioSource is a single entry of a Yomitan custom audio list response.
 type audioSource struct {
 	Name string `json:"name,omitempty"`
 	URL  string `json:"url"`
 }
 
-// audioSourceList is the response body a Yomitan "Custom URL (JSON)" audio source expects.
 type audioSourceList struct {
 	Type         string        `json:"type"`
 	AudioSources []audioSource `json:"audioSources"`
@@ -73,7 +71,7 @@ func audioSourceListHandler(https bool) http.HandlerFunc {
 		term := q.Get("term")
 		reading := q.Get("reading")
 		language := q.Get("language")
-		log.Printf("language = %s, reading = %s, term = %s\n", language, reading, term) //nolint:gosec // query params logged for local debugging only
+		log.Printf("language = %q, reading = %q, term = %q\n", language, reading, term) //nolint:gosec // logged for debugging
 
 		if _, err := synthesizeParams(term, reading, language); err != nil { // means not found, should return empty list as 200
 			writeAudioSourceList(w, []audioSource{})

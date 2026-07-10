@@ -142,3 +142,40 @@ func TestRunCmd_FileNotFound(t *testing.T) {
 		}
 	}
 }
+
+func TestNewRunCommand(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		args    []string
+		wantErr string
+	}{
+		{
+			name:    "blank file flag",
+			args:    []string{"run", "--file", ""},
+			wantErr: "--file must not be blank",
+		},
+		{
+			name:    "missing required file flag",
+			args:    []string{"run"},
+			wantErr: `Required flag "file" not set`,
+		},
+		{
+			name:    "invalid extension propagates to runCmd",
+			args:    []string{"run", "--file", "test.txt"},
+			wantErr: "file format must be csv",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := NewRunCommand().Run(t.Context(), tt.args)
+			if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+				t.Errorf("NewRunCommand().Run(%v): got err=%v, want substring=%q", tt.args, err, tt.wantErr)
+			}
+		})
+	}
+}

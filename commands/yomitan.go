@@ -31,7 +31,7 @@ func yomitanCmd(ctx context.Context, f yomitanCmdFlags) error {
 	server := &http.Server{
 		Addr:              addr,
 		Handler:           yomitan.NewHandler(http.DefaultClient, f.HTTPS),
-		ReadHeaderTimeout: 5 * time.Second,
+		ReadHeaderTimeout: 15 * time.Second,
 	}
 
 	errCh := make(chan error, 1)

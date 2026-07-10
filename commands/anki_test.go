@@ -205,3 +205,50 @@ func TestAnkiCmd_FileNotFound(t *testing.T) {
 		}
 	}
 }
+
+func TestNewAnkiCommand(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		args    []string
+		wantErr string
+	}{
+		{
+			name:    "blank profile",
+			args:    []string{"anki", "--file", "x.csv", "--profile", "", "--voice", "en"},
+			wantErr: "--profile must not be blank",
+		},
+		{
+			name:    "blank deck",
+			args:    []string{"anki", "--file", "x.csv", "--profile", "p", "--deck", "", "--voice", "en"},
+			wantErr: "--deck must not be blank",
+		},
+		{
+			name:    "invalid speed",
+			args:    []string{"anki", "--file", "x.csv", "--profile", "p", "--speed", "bogus", "--voice", "en"},
+			wantErr: "--speed must be one of these values",
+		},
+		{
+			name:    "invalid voice",
+			args:    []string{"anki", "--file", "x.csv", "--profile", "p", "--voice", "bogus"},
+			wantErr: "--voice must be one of these values",
+		},
+		{
+			name:    "missing required flags",
+			args:    []string{"anki", "--file", "x.csv"},
+			wantErr: `Required flags "profile, deck, voice" not set`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := NewAnkiCommand().Run(t.Context(), tt.args)
+			if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+				t.Errorf("NewAnkiCommand().Run(%v): got err=%v, want substring=%q", tt.args, err, tt.wantErr)
+			}
+		})
+	}
+}

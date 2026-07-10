@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 )
@@ -68,5 +69,26 @@ func TestYomitanCmd(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("yomitanCmd() did not shut down in time")
+	}
+}
+
+func TestNewYomitanCommand(t *testing.T) {
+	t.Parallel()
+
+	var lc net.ListenConfig
+	ln, err := lc.Listen(t.Context(), "tcp", "localhost:0")
+	if err != nil {
+		t.Fatalf("net.Listen(): %v", err)
+	}
+	t.Cleanup(func() { _ = ln.Close() })
+	addr, ok := ln.Addr().(*net.TCPAddr)
+	if !ok {
+		t.Fatalf("%T.Addr(): got %T, want *net.TCPAddr", ln, ln.Addr())
+	}
+
+	args := []string{"yomitan", "--host", "localhost", "--port", fmt.Sprintf("%d", addr.Port)}
+	err = NewYomitanCommand().Run(t.Context(), args)
+	if err == nil || !strings.Contains(err.Error(), "ListenAndServe") {
+		t.Errorf("NewYomitanCommand().Run(%v): got err=%v, want a ListenAndServe error", args, err)
 	}
 }
