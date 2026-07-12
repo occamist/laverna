@@ -26,12 +26,19 @@ func NewHandler(client *http.Client, https bool) http.Handler {
 	return mux
 }
 
+func queryParams(r *http.Request) (string, string, string) {
+	q := r.URL.Query()
+	term, reading, language := q.Get("term"), q.Get("reading"), q.Get("language")
+	term, reading, language = strings.TrimSpace(term), strings.TrimSpace(reading), strings.TrimSpace(language)
+	return term, reading, language
+}
+
 // synthesizeParams picks the text to synthesize (preferring reading over term,
 // since that's the actual pronunciation) and validates the requested voice.
 func synthesizeParams(term, reading, language string) (synthesize.Opt, error) {
-	text := strings.TrimSpace(reading)
+	text := reading
 	if text == "" {
-		text = strings.TrimSpace(term)
+		text = term
 	}
 	if text == "" {
 		return synthesize.Opt{}, errors.New("term and reading must not both be empty")
@@ -67,18 +74,17 @@ func audioSourceListHandler(https bool) http.HandlerFunc {
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := r.URL.Query()
-		term := q.Get("term")
-		reading := q.Get("reading")
-		language := q.Get("language")
-		log.Printf("language = %q, reading = %q, term = %q\n", language, reading, term) //nolint:gosec // logged for debugging
+		term, reading, language := queryParams(r)
+		if language != "" {
+			log.Printf("language = %q, reading = %q, term = %q\n", language, reading, term)
+		}
 
 		if _, err := synthesizeParams(term, reading, language); err != nil { // means not found, should return empty list as 200
 			writeAudioSourceList(w, []audioSource{})
 			return
 		}
 
-		audioURL := url.URL{Scheme: scheme, Host: r.Host, Path: "/audio", RawQuery: q.Encode()}
+		audioURL := url.URL{Scheme: scheme, Host: r.Host, Path: "/audio", RawQuery: r.URL.Query().Encode()}
 		sources := []audioSource{{Name: "Laverna", URL: audioURL.String()}}
 		writeAudioSourceList(w, sources)
 	}
@@ -86,8 +92,8 @@ func audioSourceListHandler(https bool) http.HandlerFunc {
 
 func audioHandler(client *http.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		q := r.URL.Query()
-		opt, err := synthesizeParams(q.Get("term"), q.Get("reading"), q.Get("language"))
+		term, reading, language := queryParams(r)
+		opt, err := synthesizeParams(term, reading, language)
 		if err != nil {
 			http.Error(w, "no audio available", http.StatusNotFound)
 			return
@@ -101,7 +107,7 @@ func audioHandler(client *http.Client) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "audio/mpeg")
-		if _, err := w.Write(audio); err != nil { //nolint:gosec // binary audio bytes with a non-HTML content type, not attacker-controlled markup
+		if _, err := w.Write(audio); err != nil {
 			log.Printf("%T.Write(): %v\n", w, err)
 			http.Error(w, "failed to write audio as response", http.StatusInternalServerError)
 		}
